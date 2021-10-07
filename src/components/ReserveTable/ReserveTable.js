@@ -6,9 +6,9 @@ import './ReserveTable.scss'
 
 const ReserveTable = () => {
 
-  const [nameState, setNameState] = useState("Gregory ")
-  const [numberState, setNumberState] = useState("258-758-4587")
-  const [emailState, setEmailState] = useState("g@email.com")
+  const [nameState, setNameState] = useState("")
+  const [numberState, setNumberState] = useState("")
+  const [emailState, setEmailState] = useState("")
   const [dateState, setDateState] = useState(null)
   const [numGuestsState, setNumGuestsState] = useState(0)
   const nothing = () => {}

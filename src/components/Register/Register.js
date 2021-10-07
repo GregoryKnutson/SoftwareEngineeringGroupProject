@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import './Register.scss'
 import { Redirect, Link } from 'react-router-dom';
+import { checkAuth, setAuth } from '../../verifyLogin';
 
 const Register = () => {
 
@@ -9,7 +10,49 @@ const Register = () => {
     const [confirmPasswordState, setConfirmPasswordState] = useState("")
 
     const handleSubmit = () => {
-        return 
+
+        if(passwordState === confirmPasswordState && usernameState !== ''){
+            const formData = new FormData();
+
+            formData.append('username', usernameState)
+            formData.append('password', passwordState)
+
+            fetch(`${process.env.API_URL}/api/register`,
+            {
+              method: 'POST',
+              body: formData,
+            }
+          )
+            .then(res => {
+              if(!res.ok) {
+                console.log(res)
+                console.log(res.status)
+              }
+              if (res.status === 403) {
+                alert("Username taken!");
+                throw Error('Could not fetch the data for that resource');
+              }
+              return res.json();
+            })
+            .then(res => {
+              setAuth(res)
+              if (checkAuth())
+                window.location.assign("/profile")
+            })
+            .catch((error) => {
+              console.error('Error: ', error);
+            })
+
+        }
+        else if (usernameState === ''){
+            alert("Username can not be blank")
+        }
+        else if (passwordState !== confirmPasswordState){
+            alert("Passwords do not match")
+        }
+        else if (passwordState === ''){
+            alert("Password can not be blank")
+        }
 
         };
 

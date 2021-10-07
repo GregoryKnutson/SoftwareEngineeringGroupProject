@@ -27,3 +27,4 @@ venv-linux
 __pycache__
 
 .vscode
+keys.py

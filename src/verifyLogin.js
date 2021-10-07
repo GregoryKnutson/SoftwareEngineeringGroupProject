@@ -23,7 +23,6 @@ export const checkAuth = () => {
     return false;
   }
 
-
   try {
     let decodedToken = jwt_decode(token);
     let expirationMS = new Date(decodedToken['expiration']).getTime();

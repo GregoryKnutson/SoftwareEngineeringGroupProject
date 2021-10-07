@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Redirect, Link } from 'react-router-dom';
+import { checkAuth, setAuth } from '../../verifyLogin';
 import './Login.scss'
 
 const Login = () => {
@@ -8,7 +9,40 @@ const Login = () => {
   const [passwordState, setPasswordState] = useState("")
 
   const handleLogin = () => {
-    return
+    const formData = new FormData();
+    formData.append("username", usernameState)
+    formData.append("password", passwordState)
+
+    fetch(`${process.env.API_URL}/api/login`, {
+        method: 'POST',
+        body: formData,
+      })
+        .then(res => {
+          if(!res.ok) {
+            alert("Invalid username/password!");
+            throw Error('Could not fetch the data for that resource');
+          }
+          if (res.status != 200) {
+            alert("Invalid username/password!");
+          }
+          return res.json();
+        })
+        .then(res => {
+          setAuth(res)
+          console.log("test")
+          window.location.assign("/reserve")
+        })
+        .catch(error => {
+          console.log(error);
+          setError(true);
+        })
+
+
+        if (checkAuth()) {
+            return (
+              <Redirect to='/reserve' />
+            )
+          }
   }
 
 
