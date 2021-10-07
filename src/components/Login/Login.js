@@ -1,12 +1,21 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, setError } from "react";
 import { Redirect, Link } from 'react-router-dom';
-import { checkAuth, setAuth } from '../../verifyLogin';
+import { checkAuth, setAuth, destroyAuth } from '../../verifyLogin';
 import './Login.scss'
 
 const Login = () => {
 
+  destroyAuth()
+
+  if (checkAuth()) {
+    return (
+      <Redirect to='/reserve' />
+    )
+  }
+
   const [usernameState, setUsernameState] = useState("")
   const [passwordState, setPasswordState] = useState("")
+  const [error, setError] = useState(false)
 
   const handleLogin = () => {
     const formData = new FormData();
@@ -37,12 +46,11 @@ const Login = () => {
           setError(true);
         })
 
-
         if (checkAuth()) {
-            return (
-              <Redirect to='/reserve' />
-            )
-          }
+          return (
+            <Redirect to='/reserve' />
+          )
+        }
   }
 
 

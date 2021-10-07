@@ -3,6 +3,7 @@ import { Redirect, Link } from 'react-router-dom';
 import DatePicker from "react-datepicker";
 import 'react-datepicker/dist/react-datepicker.css'
 import './ReserveTable.scss'
+import { checkAuth, getUserId } from "../../verifyLogin";
 
 const ReserveTable = () => {
 
@@ -12,6 +13,51 @@ const ReserveTable = () => {
   const [dateState, setDateState] = useState(null)
   const [numGuestsState, setNumGuestsState] = useState(0)
   const nothing = () => {}
+
+  useEffect(() => {
+    if (checkAuth()){
+        fetch(`${process.env.API_URL}/api/reserve?token=${localStorage.getItem('token')}&username=${getUserId()}`,
+        {
+          method: 'GET',
+        }
+        )
+        .then((response) => response.json())
+        .then((result) => {
+          console.log('Success: ', result);
+
+          if (result.name == undefined || result.phonenumber == undefined || result.email == undefined){
+            alert("Please enter profile credentials")
+            window.location.assign("/profile")
+        }
+          setNameState(result.name)
+          setNumberState(result.phonenumber)
+          setEmailState(result.email)
+        })
+        .catch((error) => {
+          console.error('Error: ', error);
+        });
+    }
+    else{
+            const search = location.search;
+            const params = new URLSearchParams(search)
+            if (params.get('guest') == 'true'){
+                const name = params.get('name')
+                const number = params.get('number')
+                const email = params.get('email')
+
+                if (name == undefined || number == undefined || email == undefined){
+                    alert("Please enter valid credentials")
+                    window.location.assign("/guest")
+                }
+
+                setNameState(name)
+                setNumberState(number)
+                setEmailState(email)
+
+            }
+        }
+  }, [])
+
 
   const handleReserve = () => {
     return

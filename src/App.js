@@ -19,7 +19,7 @@ const App = () => {
         <Route path="/login" component={Login} />
         <PrivateRoute path="/profile" component={UserInfo} />
         <Route path="/guest" component={GuestInfo} />
-        <PrivateRoute path="/reserve" component={ReserveTable} />
+        <Route path="/reserve" component={ReserveTable} />
       </Switch>
     </BrowserRouter>
   );

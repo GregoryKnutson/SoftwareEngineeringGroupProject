@@ -44,7 +44,7 @@ class Usercredentials(db.Model):
 class Userinfo(db.Model):
   usercredentials_username = db.Column(db.String(20), db.ForeignKey('usercredentials.username', ondelete = "CASCADE"), primary_key = True)
   name = db.Column(db.String(45))
-  phonenumber = db.Column(db.Integer)
+  phonenumber = db.Column(db.String(12))
   email = db.Column(db.String(45))
 
 @app.route('/', methods=['GET'])
@@ -96,3 +96,64 @@ def login_endpoint():
       return {'token': token}
 
     return make_response('Unable to verify', 403, {'WWW-Authenticate': 'Basic realm: "Authentication failed!"'})
+
+@app.route('/api/profile', methods=['GET', 'POST'])
+def profile_endpoint():
+
+  if request.method == 'POST':
+    username = request.values.get('username')
+    name = request.form['name']
+    phonenumber = request.form['phonenumber']
+    email = request.form['email']
+
+    user = Userinfo.query.filter_by(usercredentials_username = username).first()
+
+    #Updates current user
+    if user:
+      user.name = name
+      user.phonenumber = phonenumber
+      user.email = email
+      print("updating")
+    else: #Creates new user 
+      newProfile = Userinfo(usercredentials_username = username, name = name, phonenumber = phonenumber, email = email)
+      db.session.merge(newProfile)
+
+    db.session.commit()
+    return "Your data is submitted"
+
+  if request.method == 'GET':
+    username = request.values.get('username')
+    user = Userinfo.query.filter_by(usercredentials_username = username).first()
+
+    if user: 
+        dataToReturn = {
+            "name": user.name,
+            "phonenumber": user.phonenumber,
+            "email": user.email
+        }
+
+        print(dataToReturn)
+
+        return json.dumps(dataToReturn)
+    else:
+        return jsonify({'Alert!': 'Error somewhere!'}), 400
+
+@app.route('/api/reserve', methods=['GET', 'POST'])
+def reserve_endpoint():
+
+  if request.method == 'GET':
+    username = request.values.get('username')
+    user = Userinfo.query.filter_by(usercredentials_username = username).first()
+
+    if user: 
+        dataToReturn = {
+            "name": user.name,
+            "phonenumber": user.phonenumber,
+            "email": user.email
+        }
+
+        print(dataToReturn)
+
+        return json.dumps(dataToReturn)
+    else:
+        return jsonify({'Alert!': 'Error somewhere!'}), 400

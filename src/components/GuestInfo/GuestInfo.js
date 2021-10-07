@@ -7,9 +7,44 @@ const GuestInfo = () => {
     const [nameState, setNameState] = useState("")
     const [numberState, setNumberState] = useState("")
     const [emailState, setEmailState] = useState("")
+    const [errorsState, setErrorsState] = useState({});
   
     const SaveInfo = () => {
-      return
+        function alertObject(obj){      
+            for(var key in obj) {
+            alert(obj[key]);
+            if( typeof obj[key] === 'object' ) {
+                alertObject(obj[key]);
+            }
+            }
+        }
+      
+          const validate = () =>{
+            let errors = {};
+            if (nameState == '') errors.name = "Name can not be blank."
+            if (nameState.length > 45) errors.name = "Name is too long."
+            if (numberState.length != 12) {
+                console.log(numberState.length)
+                errors.number = "Invalid phonenumber."
+            }
+            if (isNaN(numberState)) errors.number = "Invalid phonenumber."
+            if (numberState.length == '') errors.email = "Email can not be blank"
+            if (emailState == '') errors.email = "Email can not be blank."
+            if (emailState.length > 45) errors.email = "Email is too long."
+      
+            if (Object.keys(errors) !== 0){
+              setErrorsState(errors)
+              return errors;
+            }
+          }
+
+          const errors = validate()
+    
+          if (Object.keys(errors).length === 0){
+            window.location.assign(`/reserve?guest=true&name=${nameState}&number=${numberState}&email=${emailState}`)
+          }
+
+
     }
   
 
