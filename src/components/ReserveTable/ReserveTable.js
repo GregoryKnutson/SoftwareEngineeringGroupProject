@@ -6,11 +6,12 @@ import './ReserveTable.scss'
 
 const ReserveTable = () => {
 
-  const [nameState, setNameState] = useState("")
-  const [numberState, setNumberState] = useState("")
-  const [emailState, setEmailState] = useState("")
+  const [nameState, setNameState] = useState("Gregory ")
+  const [numberState, setNumberState] = useState("258-758-4587")
+  const [emailState, setEmailState] = useState("g@email.com")
   const [dateState, setDateState] = useState(null)
   const [numGuestsState, setNumGuestsState] = useState(0)
+  const nothing = () => {}
 
   const handleReserve = () => {
     return
@@ -31,8 +32,9 @@ const ReserveTable = () => {
                       type="text"
                       name="name"
                       id="name"
+                      readOnly={!!nameState}
                       value={nameState}
-                      onChange={(e)=>setNameState(e.target.value)}
+                      onChange={nameState ? nothing : setNameState}
                   />
               </div>
               <div className= "in">
@@ -41,8 +43,9 @@ const ReserveTable = () => {
                       type="text"
                       name="number"
                       id="number"
+                      readOnly={!!numberState}
                       value={numberState}
-                      onChange={(e)=>setNumberState(e.target.value)}
+                      onChange={numberState ? nothing : setNumberState}
                   />
               </div>
               <div className= "in">
@@ -51,8 +54,9 @@ const ReserveTable = () => {
                       type="text"
                       name="email"
                       id="email"
+                      readOnly={!!emailState}
                       value={emailState}
-                      onChange={(e)=>setEmailState(e.target.value)}
+                      onChange={emailState ? nothing : setEmailState}
                   />
               </div>
               <div className= "in">

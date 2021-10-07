@@ -1,0 +1,17 @@
+.UserInfo {
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+    margin-top: 5%;
+  
+    &__container {
+      border-radius: 15px;
+      width: 50%;
+      margin: auto;
+      color: black;
+      text-align: left;
+      border: black solid .5px;
+      background-color: whitesmoke;
+      border: 1px solid black;
+    }
+  }

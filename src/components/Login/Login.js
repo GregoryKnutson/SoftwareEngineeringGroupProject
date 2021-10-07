@@ -54,6 +54,10 @@ const Login = () => {
                 <label>Don't have an Account? Create one{'\u00A0'}</label>
                   <Link to="/register">here</Link>
           </div>
+          <div className="GuestLink">
+                <label>or continue as guest{'\u00A0'}</label>
+                  <Link to="/register">here</Link>
+          </div>
 
       </div>
       </div>
