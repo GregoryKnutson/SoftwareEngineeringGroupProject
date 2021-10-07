@@ -17,9 +17,9 @@ const App = () => {
         </Route>
         <Route path="/register" component={Register} />
         <Route path="/login" component={Login} />
-        <Route path="/profile" component={UserInfo} />
+        <PrivateRoute path="/profile" component={UserInfo} />
         <Route path="/guest" component={GuestInfo} />
-        <Route path="/reserve" component={ReserveTable} />
+        <PrivateRoute path="/reserve" component={ReserveTable} />
       </Switch>
     </BrowserRouter>
   );

@@ -56,7 +56,7 @@ const Login = () => {
           </div>
           <div className="GuestLink">
                 <label>or continue as guest{'\u00A0'}</label>
-                  <Link to="/register">here</Link>
+                  <Link to="/guest">here</Link>
           </div>
 
       </div>
