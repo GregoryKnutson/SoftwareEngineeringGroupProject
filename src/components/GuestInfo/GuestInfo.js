@@ -24,7 +24,6 @@ const GuestInfo = () => {
             if (nameState == '') errors.name = "Name can not be blank."
             if (nameState.length > 45) errors.name = "Name is too long."
             if (numberState.length != 12) {
-                console.log(numberState.length)
                 errors.number = "Invalid phonenumber."
             }
             if (isNaN(numberState)) errors.number = "Invalid phonenumber."
@@ -34,14 +33,16 @@ const GuestInfo = () => {
       
             if (Object.keys(errors) !== 0){
               setErrorsState(errors)
-              return errors;
+              return errors
             }
           }
-
           const errors = validate()
     
           if (Object.keys(errors).length === 0){
             window.location.assign(`/reserve?guest=true&name=${nameState}&number=${numberState}&email=${emailState}`)
+          }
+          else {
+              alertObject(errors)
           }
 
 
