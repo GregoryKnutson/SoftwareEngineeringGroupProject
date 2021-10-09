@@ -46,6 +46,19 @@ class Userinfo(db.Model):
   name = db.Column(db.String(45))
   phonenumber = db.Column(db.String(12))
   email = db.Column(db.String(45))
+  points = db.Column(db.Integer)
+  billingaddressid = db.Column(db.Integer, db.ForeignKey('address.addressid', ondelete = "CASCADE"))
+  mailingaddressid = db.Column(db.Integer, db.ForeignKey('address.addressid', ondelete = "CASCADE"))
+  paymentmethod = db.Column(db.String(6))
+
+class Address(db.Model):
+  addressid = db.Column(db.Integer, primary_key=True)
+  city = db.Column(db.String(20))
+  state = db.Column(db.String(2))
+  address = db.Column(db.String(50))
+  zip = db.Column(db.Integer)
+  billing = relationship("Userinfo", backref = "Address", foreign_keys="Userinfo.billingaddressid", passive_deletes = True, uselist=False)
+  mailing = relationship("Userinfo", backref = "Address2", foreign_keys="Userinfo.mailingaddressid", passive_deletes = True, uselist=False)
 
 @app.route('/', methods=['GET'])
 def index():
