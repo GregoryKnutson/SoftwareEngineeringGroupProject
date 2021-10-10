@@ -4,13 +4,9 @@ import { checkAuth, setAuth, getUserId } from "../../verifyLogin";
 import "./UserInfo.scss";
 
 const AddressForm = ({onAddressChange, address}) => {
-
-  const [stateState, setStateState] = useState("");
-  const [cityState, setCityState] = useState("");
-  const [zipState, setZipState] = useState("");
-
   return (
-            <div className="billingaddress">
+    <div>
+                  <div className="billingaddress">
               <div className="in">
                 <label>Address:</label>
                 <input
@@ -18,7 +14,7 @@ const AddressForm = ({onAddressChange, address}) => {
                   type="text"
                   name="address"
                   id="address"
-                  value={address}
+                  value={address.address}
                   onChange={onAddressChange}
                 />
               </div>
@@ -31,17 +27,18 @@ const AddressForm = ({onAddressChange, address}) => {
                       type="text"
                       name="city"
                       id="city"
-                      value={address}
+                      value={address.city}
                       onChange={onAddressChange}
                     />
                   </div>
                   <div className="address_state">
                     <label>State:</label>
                     <select
+                      key="state"
                       className="state"
                       name="state"
                       id="state"
-                      value={address}
+                      value={address.state}
                       onChange={onAddressChange}
                     >
                       <option value>Select</option>
@@ -104,13 +101,14 @@ const AddressForm = ({onAddressChange, address}) => {
                       type="text"
                       name="zip"
                       id="zip"
-                      value={address}
+                      value={address.zip}
                       onChange={onAddressChange}
                     />
                   </div>
                 </div>
               </div>
             </div>
+    </div>
   );
 };
 export default AddressForm;

@@ -6,11 +6,11 @@ import "./UserInfo.scss";
 
 const UserInfo = () => {
 
-  let tempAddress = {
+  let emptyAddress = {
     address: "",
-    city: " ",
-    state: " ",
-    zip: " "
+    city: "",
+    state: "",
+    zip: ""
 }
 
   const [nameState, setNameState] = useState("");
@@ -19,8 +19,8 @@ const UserInfo = () => {
   const [checked, setChecked] = useState(true);
   const [errorsState, setErrorsState] = useState({});
 
-  const [billingAddress, setBillingAddress] = useState(tempAddress)
-  const [mailingAddress, setMailingAddress] = useState(tempAddress)
+  const [billingAddress, setBillingAddress] = useState(emptyAddress)
+  const [mailingAddress, setMailingAddress] = useState(emptyAddress)
 
   const changeBillingAddress = (e) => {
     setBillingAddress({...billingAddress, [e.target.name]:e.target.value})
@@ -45,10 +45,19 @@ const UserInfo = () => {
     )
       .then((response) => response.json())
       .then((result) => {
+
+
         console.log("Success: ", result);
         setNameState(result.name);
         setNumberState(result.phonenumber);
         setEmailState(result.email);
+        setBillingAddress(result.billingAddress)
+
+        if(result.billingAddress !== result.mailingAddress){
+          setChecked(false)
+          setMailingAddress(result.mailingAddress)
+        }
+
       })
       .catch((error) => {
         console.error("Error: ", error);
@@ -70,7 +79,7 @@ const UserInfo = () => {
 
       if (nameState == "") errors.name = "Name can not be blank.";
       if (nameState.length > 45) errors.name = "Name is too long.";
-      if (numberState.length != 12) errors.number = "Invalid phonenumber.";
+      if (numberState.length != 10) errors.number = "Invalid phonenumber.";
       if (isNaN(numberState)) errors.number = "Invalid phonenumber.";
       if (numberState.length == "") errors.email = "Email can not be blank";
       if (emailState == "") errors.email = "Email can not be blank.";
@@ -103,6 +112,8 @@ const UserInfo = () => {
       formData.append("name", nameState);
       formData.append("phonenumber", numberState);
       formData.append("email", emailState);
+      formData.append("billingAddress", JSON.stringify(billingAddress))
+      formData.append("mailingAddress", JSON.stringify(mailingAddress))
 
       fetch(
         `${process.env.API_URL}/api/profile?token=${localStorage.getItem(
@@ -128,30 +139,24 @@ const UserInfo = () => {
     }
   };
 
-  const isMailingAddress = () => {
+  const showMailingAddress = () => {
     if (!checked) {
       return (
         <div>
           <div className="billingTitle">
             <label className="billingLabel">Mailing Address:</label>
           </div>
-          <Address Address={mailingAddress} onAddressChange={changeMailingAddress}/>
+          <Address address={mailingAddress} onAddressChange={changeMailingAddress}/>
         </div>
       );
     }
   };
 
-  const Test = () => {
-    console.log(billingAddress)
-    console.log(mailingAddress)
-  }
-
   const handleCheck = (e) => {
     setChecked(e.target.checked)
-    console.log(checked)
 
     if(checked === true){
-      setMailingAddress(tempAddress)
+      setMailingAddress(emptyAddress)
     }
     else{
       setMailingAddress(billingAddress)
@@ -203,7 +208,7 @@ const UserInfo = () => {
               <div className="billingTitle">
                 <label className="billingLabel">Billing Address:</label>
               </div>
-              <Address Address={billingAddress} onAddressChange={changeBillingAddress}/>
+              <Address address={billingAddress} onAddressChange={changeBillingAddress}/>
             </div>
             <div className="deliveryAddress">
               <div className="checkbox">
@@ -217,7 +222,7 @@ const UserInfo = () => {
                   My billing address is the same as my delivery address.
                 </label>
               </div>
-              {isMailingAddress()}
+            {showMailingAddress()}
             </div>
           </div>
           <div className="button">

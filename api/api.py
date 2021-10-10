@@ -56,9 +56,15 @@ class Address(db.Model):
   city = db.Column(db.String(20))
   state = db.Column(db.String(2))
   address = db.Column(db.String(50))
-  zip = db.Column(db.Integer)
+  zipcode = db.Column(db.Integer)
   billing = relationship("Userinfo", backref = "Address", foreign_keys="Userinfo.billingaddressid", passive_deletes = True, uselist=False)
   mailing = relationship("Userinfo", backref = "Address2", foreign_keys="Userinfo.mailingaddressid", passive_deletes = True, uselist=False)
+
+def areAddressEqual(mailing, billing):
+  if mailing == billing:
+    return True
+  else:
+    return False
 
 @app.route('/', methods=['GET'])
 def index():
@@ -110,6 +116,12 @@ def login_endpoint():
 
     return make_response('Unable to verify', 403, {'WWW-Authenticate': 'Basic realm: "Authentication failed!"'})
 
+@app.route('/test')
+def test_endpoint():
+      checkBillingAddress = Userinfo.query.filter((Userinfo.billingaddressid == 35) | (Userinfo.mailingaddressid == 35))
+      print(checkBillingAddress.count())
+      return ''
+
 @app.route('/api/profile', methods=['GET', 'POST'])
 def profile_endpoint():
 
@@ -119,19 +131,90 @@ def profile_endpoint():
     phonenumber = request.form['phonenumber']
     email = request.form['email']
 
+    billingAddress = json.loads(request.form['billingAddress'])
+    mailingAddress = json.loads(request.form['mailingAddress'])
+
+    print(billingAddress)
+    print(mailingAddress)
+
+    isAddressEqual = areAddressEqual(billingAddress, mailingAddress)
+    print(isAddressEqual)
+
     user = Userinfo.query.filter_by(usercredentials_username = username).first()
+    billingAddressID = None
+    mailingAddressID = None
+
+    if isAddressEqual: #checks if addresses are equal
+      userAddress = Address.query.filter_by(city = billingAddress['city'], state = billingAddress['state'], address = billingAddress['address'], zipcode = billingAddress['zip']).first() #looks for address in DB
+      if userAddress: #if found stores ID of address
+        billingAddressID = userAddress.addressid
+        mailingAddressID = userAddress.addressid
+      else: #if not found adds address to id and stores value
+        newAddress = Address(city = billingAddress['city'], state = billingAddress['state'], address = billingAddress['address'], zipcode = billingAddress['zip'])
+        db.session.merge(newAddress)
+        db.session.commit()
+        newAddress = Address.query.filter_by(city = billingAddress['city'], state = billingAddress['state'], address = billingAddress['address'], zipcode = billingAddress['zip']).first()
+        billingAddressID = newAddress.addressid
+        mailingAddressID = newAddress.addressid
+    else: #if not equal
+      userMailingAddress = Address.query.filter_by(city = mailingAddress['city'], state = mailingAddress['state'], address = mailingAddress['address'], zipcode = mailingAddress['zip']).first() #looks for address in DB
+      userBillingAddress = Address.query.filter_by(city = billingAddress['city'], state = billingAddress['state'], address = billingAddress['address'], zipcode = billingAddress['zip']).first() #looks for address in DB
+      if userBillingAddress: #if found
+        billingAddressID = userBillingAddress.addressid #Store value of the id
+      else:
+        newBillingAddress = Address(city = billingAddress['city'], state = billingAddress['state'], address = billingAddress['address'], zipcode = billingAddress['zip']) #adds to db
+        db.session.merge(newBillingAddress)
+        db.session.commit()
+        newBillingAddress = Address.query.filter_by(city = billingAddress['city'], state = billingAddress['state'], address = billingAddress['address'], zipcode = billingAddress['zip']).first()
+        print(newBillingAddress)
+        billingAddressID = newBillingAddress.addressid #store value to id
+
+      if userMailingAddress:
+        mailingAddressID = userMailingAddress.addressid
+      else:
+        newMailingAddress =  Address(city = mailingAddress['city'], state = mailingAddress['state'], address = mailingAddress['address'], zipcode = mailingAddress['zip'])
+        db.session.merge(newMailingAddress)
+        db.session.commit()
+        newMailingAddress = Address.query.filter_by(city = mailingAddress['city'], state = mailingAddress['state'], address = mailingAddress['address'], zipcode = mailingAddress['zip']).first()
+        mailingAddressID = newMailingAddress.addressid
+        print(mailingAddressID)
 
     #Updates current user
     if user:
       user.name = name
       user.phonenumber = phonenumber
       user.email = email
+
+      oldBillingAddressID = user.billingaddressid
+      oldMailingAddressID = user.mailingaddressid
+
+      user.billingaddressid = billingAddressID
+      user.mailingaddressid = mailingAddressID
+
+      db.session.commit()
+
+      #check if address is still being used
+      checkBillingAddress = Userinfo.query.filter((Userinfo.billingaddressid == oldBillingAddressID) | (Userinfo.mailingaddressid == oldBillingAddressID))
+      checkMailingAddress = Userinfo.query.filter((Userinfo.billingaddressid == oldMailingAddressID) | (Userinfo.mailingaddressid == oldMailingAddressID))
+
+      print(checkBillingAddress.count())
+      print(checkMailingAddress.count())
+
+      if checkBillingAddress.count() == 0:
+        Address.query.filter_by(addressid = oldBillingAddressID).delete()
+        print("Deleting not used Address")
+        db.session.commit()
+      if checkMailingAddress.count() == 0:
+        Address.query.filter_by(addressid = oldMailingAddressID).delete()
+        print("Deleting not used Address")
+        db.session.commit()
+
       print("updating")
     else: #Creates new user 
-      newProfile = Userinfo(usercredentials_username = username, name = name, phonenumber = phonenumber, email = email)
+      newProfile = Userinfo(usercredentials_username = username, name = name, phonenumber = phonenumber, email = email, billingaddressid = billingAddressID, mailingaddressid = mailingAddressID)
       db.session.merge(newProfile)
+      db.session.commit()
 
-    db.session.commit()
     return "Your data is submitted"
 
   if request.method == 'GET':
@@ -139,10 +222,28 @@ def profile_endpoint():
     user = Userinfo.query.filter_by(usercredentials_username = username).first()
 
     if user: 
+        billingAddressQuery = Address.query.filter_by(addressid = user.billingaddressid).first()
+        mailingAddressQuery = Address.query.filter_by(addressid = user.mailingaddressid).first()
+
+        bAddress = {
+          "address": billingAddressQuery.address,
+          "city": billingAddressQuery.city,
+          "state": billingAddressQuery.state,
+          "zip": billingAddressQuery.zipcode
+        }
+        mAddress = {
+          "address": mailingAddressQuery.address,
+          "city": mailingAddressQuery.city,
+          "state": mailingAddressQuery.state,
+          "zip": mailingAddressQuery.zipcode
+        }
+
         dataToReturn = {
             "name": user.name,
             "phonenumber": user.phonenumber,
-            "email": user.email
+            "email": user.email,
+            "billingAddress": bAddress,
+            "mailingAddress": mAddress
         }
 
         print(dataToReturn)
