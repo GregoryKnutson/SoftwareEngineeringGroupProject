@@ -3,6 +3,7 @@ import { Redirect, Link } from "react-router-dom";
 import { checkAuth, setAuth, getUserId } from "../../verifyLogin";
 import Address from "./AddressForm";
 import "./UserInfo.scss";
+import NavBar from "../NavBar/NavBar";
 
 const UserInfo = () => {
 
@@ -165,6 +166,7 @@ const UserInfo = () => {
 
   return (
     <div>
+      <NavBar/>
       <div className="UserInfo">
         <div className="UserInfo__container">
           <div className="title">

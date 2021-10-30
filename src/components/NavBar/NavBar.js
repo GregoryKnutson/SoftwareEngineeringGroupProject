@@ -1,8 +1,7 @@
 import React from 'react';
 import './NavBar.scss'
-import { NavLink, useHistory, withRouter } from 'react-router-dom';
-import { Link } from 'react-router-dom';
-import { destroyAuth, checkAuth } from '../../verifyLogin';
+import { NavLink, useHistory } from 'react-router-dom';
+import { destroyAuth } from '../../verifyLogin';
 
 const NavBar = () => {
     const history = useHistory();

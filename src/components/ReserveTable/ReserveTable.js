@@ -4,6 +4,7 @@ import DatePicker from "react-datepicker";
 import 'react-datepicker/dist/react-datepicker.css'
 import './ReserveTable.scss'
 import { checkAuth, getUserId } from "../../verifyLogin";
+import NavBar from "../NavBar/NavBar";
 
 const ReserveTable = () => {
 
@@ -12,6 +13,7 @@ const ReserveTable = () => {
   const [emailState, setEmailState] = useState("")
   const [dateState, setDateState] = useState(null)
   const [numGuestsState, setNumGuestsState] = useState(0)
+  const [isLoggedIn, setLoggedIn] = useState(false)
   const nothing = () => {}
 
   useEffect(() => {
@@ -24,6 +26,7 @@ const ReserveTable = () => {
         .then((response) => response.json())
         .then((result) => {
           console.log('Success: ', result);
+          setLoggedIn(true)
 
           if (result.name == undefined || result.phonenumber == undefined || result.email == undefined){
             alert("Please enter profile credentials")
@@ -67,6 +70,10 @@ const ReserveTable = () => {
     return(
       <div>
       <div className="reserveTable">
+          {isLoggedIn
+          ? <NavBar></NavBar>
+          : <div></div>
+          }
           <div className="reserveTable__container">
           <div className="title">
           <h1>ReserveTable</h1>
