@@ -42,7 +42,8 @@ class Usercredentials(db.Model):
   information = relationship("Userinfo", backref = "Usercredentials", passive_deletes = True, uselist=False)
 
 class Userinfo(db.Model):
-  usercredentials_username = db.Column(db.String(20), db.ForeignKey('usercredentials.username', ondelete = "CASCADE"), primary_key = True)
+  useridnum = db.Column(db.Integer, primary_key=True)
+  usercredentials_username = db.Column(db.String(20), db.ForeignKey('usercredentials.username', ondelete = "CASCADE"))
   name = db.Column(db.String(45))
   phonenumber = db.Column(db.String(12))
   email = db.Column(db.String(45))
@@ -50,6 +51,7 @@ class Userinfo(db.Model):
   billingaddressid = db.Column(db.Integer, db.ForeignKey('address.addressid', ondelete = "CASCADE"))
   mailingaddressid = db.Column(db.Integer, db.ForeignKey('address.addressid', ondelete = "CASCADE"))
   paymentmethod = db.Column(db.String(6))
+  reservation = relationship("Reservations", backref = "Userinfo", passive_deletes = True, uselist=True)
 
 class Address(db.Model):
   addressid = db.Column(db.Integer, primary_key=True)
@@ -59,6 +61,16 @@ class Address(db.Model):
   zipcode = db.Column(db.Integer)
   billing = relationship("Userinfo", backref = "Address", foreign_keys="Userinfo.billingaddressid", passive_deletes = True, uselist=False)
   mailing = relationship("Userinfo", backref = "Address2", foreign_keys="Userinfo.mailingaddressid", passive_deletes = True, uselist=False)
+
+class Reservations(db.Model):
+  reservationnumber = db.Column(db.Integer, primary_key=True)
+  ismember = db.Column(db.Boolean)
+  userinfo_useridnum = db.Column(db.Integer, db.ForeignKey('userinfo.useridnum', ondelete = "CASCADE"))
+  numpeople = db.Column(db.Integer)
+  numeighttable = db.Column(db.Integer)
+  numsixtable = db.Column(db.Integer)
+  numfourtable = db.Column(db.Integer)
+  numtwotable = db.Column(db.Integer)
 
 def areAddressEqual(mailing, billing):
   if mailing == billing:
@@ -219,6 +231,7 @@ def profile_endpoint():
 
   if request.method == 'GET':
     username = request.values.get('username')
+    print(username)
     user = Userinfo.query.filter_by(usercredentials_username = username).first()
 
     if user: 
@@ -239,18 +252,31 @@ def profile_endpoint():
         }
 
         dataToReturn = {
-            "name": user.name,
-            "phonenumber": user.phonenumber,
-            "email": user.email,
-            "billingAddress": bAddress,
-            "mailingAddress": mAddress
-        }
-
-        print(dataToReturn)
+                "name": user.name,
+                "phonenumber": user.phonenumber,
+                "email": user.email,
+                "billingAddress": bAddress,
+                "mailingAddress": mAddress
+            }
 
         return json.dumps(dataToReturn)
     else:
-        return jsonify({'Alert!': 'Error somewhere!'}), 400
+        blankAddress = {
+          "address": "",
+          "city": "",
+          "state": "",
+          "zip": "",
+        }
+
+        dataToReturn = {
+          "name": "",
+          "phonenumber": "",
+          "email": "",
+          "billingAddress": blankAddress,
+          "mailingAddress": blankAddress,
+        }
+        return json.dumps(dataToReturn)
+
 
 @app.route('/api/reserve', methods=['GET', 'POST'])
 def reserve_endpoint():

@@ -35,11 +35,21 @@ const UserInfo = () => {
     setMailingAddress({...mailingAddress, [e.target.name]:e.target.value})
   }
 
+  const haveSameData = function (obj1, obj2) {
+    const obj1Length = Object.keys(obj1).length;
+    const obj2Length = Object.keys(obj2).length;
+
+    if (obj1Length === obj2Length) {
+        return Object.keys(obj1).every(
+            key => obj2.hasOwnProperty(key)
+                && obj2[key] === obj1[key]);
+    }
+    return false;
+}
+
   useEffect(() => {
     fetch(
-      `${process.env.API_URL}/api/profile?token=${localStorage.getItem(
-        "token"
-      )}&username=${getUserId()}`,
+      `${process.env.API_URL}/api/profile?token=${localStorage.getItem("token")}&username=${getUserId()}`,
       {
         method: "GET",
       }
@@ -54,7 +64,11 @@ const UserInfo = () => {
         setEmailState(result.email);
         setBillingAddress(result.billingAddress)
 
-        if(result.billingAddress !== result.mailingAddress){
+        if(result.billingAddress == emptyAddress){
+          console.log("fdasgasg")
+        }
+
+        if(!haveSameData(result.billingAddress, result.mailingAddress)){
           setChecked(false)
           setMailingAddress(result.mailingAddress)
         }
