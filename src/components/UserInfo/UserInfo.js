@@ -64,10 +64,6 @@ const UserInfo = () => {
         setEmailState(result.email);
         setBillingAddress(result.billingAddress)
 
-        if(result.billingAddress == emptyAddress){
-          console.log("fdasgasg")
-        }
-
         if(!haveSameData(result.billingAddress, result.mailingAddress)){
           setChecked(false)
           setMailingAddress(result.mailingAddress)
