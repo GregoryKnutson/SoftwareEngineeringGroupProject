@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Redirect, Link } from 'react-router-dom';
 import DatePicker from "react-datepicker";
 import 'react-datepicker/dist/react-datepicker.css'
+import TimePicker from 'react-bootstrap-time-picker'
 import './ReserveTable.scss'
 import { checkAuth, getUserId } from "../../verifyLogin";
 import NavBar from "../NavBar/NavBar";
@@ -12,6 +13,8 @@ const ReserveTable = () => {
   const [numberState, setNumberState] = useState("")
   const [emailState, setEmailState] = useState("")
   const [dateState, setDateState] = useState(null)
+  const [startTimeState, setStartTimeState] = useState(36000)
+  const [endTimeState, setEndTimeState] = useState(36000)
   const [numGuestsState, setNumGuestsState] = useState(0)
   const [isLoggedIn, setLoggedIn] = useState(false)
   const nothing = () => {}
@@ -61,11 +64,88 @@ const ReserveTable = () => {
         }
   }, [])
 
-
-  const handleReserve = () => {
-    return
+  const getTimeString = (seconds) => {
+      var date = new Date(0);
+      date.setSeconds(seconds)
+      var timeString = date.toISOString().substr(11, 8)
+      return timeString
   }
 
+
+
+  const handleReserve = () => {
+    
+    function alertObject(obj){      
+        for(var key in obj) {
+        alert(obj[key]);
+        if( typeof obj[key] === 'object' ) {
+            alertObject(obj[key]);
+        }
+        }
+    }
+    
+    const validate = () =>{
+        let errors = {};
+        if (nameState == '') errors.name = "Name can not be blank."
+        if (nameState.length > 45) errors.name = "Name is too long."
+        if (numberState.length != 10) errors.number = "Invalid phonenumber."
+        if (isNaN(numberState)) errors.number = "Invalid phonenumber."
+        if (numberState.length == '') errors.email = "Email can not be blank"
+        if (emailState == '') errors.email = "Email can not be blank."
+        if (emailState.length > 45) errors.email = "Email is too long."
+        if (numGuestsState <= 0) errors.guest = "Invalid number of guests."
+        if (startTimeState >= endTimeState) errors.time = "Starting time can not be greater than or equal to ending time."
+        if (dateState == null) errors.date = "Please select a date."
+    
+        if (Object.keys(errors) !== 0){
+          return errors
+        }
+      }
+
+    const errors = validate();
+
+    if (Object.keys(errors).length === 0){
+        let dayString = dateState.toISOString().substr(0, 10)
+        let startTime = getTimeString(startTimeState)
+        let endTime = getTimeString(endTimeState)
+    
+        const formData = new FormData();
+        formData.append('ismember', isLoggedIn)
+        formData.append('name', nameState)
+        formData.append('number', numberState)
+        formData.append('email', emailState)
+        formData.append('reservationDay', dayString)
+        formData.append('reservationStartTime', startTime)
+        formData.append('reservationEndTime', endTime)
+        formData.append('numGuests', numGuestsState)
+        if(isLoggedIn){
+            formData.append('username', getUserId())
+        }
+  
+        fetch(
+          `${process.env.API_URL}/api/reserve`,
+          {
+            method: "POST",
+            mode: "no-cors",
+            body: formData,
+          }
+        )
+          .then((response) => response.json)
+          .then((result) => {
+            console.log("Success: ", result);
+            alert("Thank you! Submission Complete!")
+            //window.location.assign("/home")
+  
+          })
+          .catch((error) => {
+            console.error("Error: ", error);
+          });
+        
+      }
+      else {
+        alertObject(errors)
+      }
+  }
 
     return(
       <div>
@@ -113,16 +193,36 @@ const ReserveTable = () => {
                   />
               </div>
               <div className= "in">
-              <label>Reservation Time:</label>
-                    <DatePicker
-                        name="reservationDate"
-                        id="reservationDate"
-                        showTimeSelect
-                        onChange={setDateState}
-                        dateFormat="MM/dd/yy, h:mm aa"
-                        selected={dateState}
-                        minDate={new Date()}
-                    />
+                  <div className = "reservation">
+                      <div className = "reservation_day">
+                        <label>Reservation Day:</label>
+                            <DatePicker
+                                name="reservationDate"
+                                id="reservationDate"
+                                onChange={setDateState}
+                                selected={dateState}
+                                minDate={new Date()}
+                            />
+                      </div>
+                      <div className = "reservation_start">
+                          <label>Reservation Starting Time:</label>
+                          <TimePicker
+                          start="10:00"
+                          end="22:00"
+                          onChange={setStartTimeState}
+                          value={startTimeState}
+                          />
+                      </div>
+                      <div className = "reservation_end">
+                          <label>Reservation Ending Time:</label>
+                          <TimePicker
+                          start="10:00"
+                          end="22:00"
+                          onChange = {setEndTimeState}
+                          value={endTimeState}
+                          />
+                      </div>
+                  </div>
               </div>
               <div className= "in">
               <label>Number of Guests:</label>
