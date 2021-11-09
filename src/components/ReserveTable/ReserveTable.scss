@@ -53,3 +53,20 @@
     display: flex;
     justify-content: center;
   }
+  .reservation{
+    display: flex;
+    width: 100%;
+
+    &_day{
+      display:grid;
+      margin-right: 100px;
+    }
+
+    &_start{
+      display: grid;
+      margin-right: 100px;
+    }
+    &_end{
+      display: grid;
+    }
+  }

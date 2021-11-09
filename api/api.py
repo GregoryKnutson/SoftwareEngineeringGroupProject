@@ -66,11 +66,20 @@ class Reservations(db.Model):
   reservationnumber = db.Column(db.Integer, primary_key=True)
   ismember = db.Column(db.Boolean)
   userinfo_useridnum = db.Column(db.Integer, db.ForeignKey('userinfo.useridnum', ondelete = "CASCADE"))
+  reservationday = db.Column(db.Date)
+  reservationstarttime = db.Column(db.Time)
+  reservationendtime = db.Column(db.Time)
   numpeople = db.Column(db.Integer)
   numeighttable = db.Column(db.Integer)
   numsixtable = db.Column(db.Integer)
   numfourtable = db.Column(db.Integer)
   numtwotable = db.Column(db.Integer)
+
+class Tables():
+  numEightTable = 4
+  numSixTable = 4
+  numFourTable = 4
+  numTwoTable = 4
 
 def areAddressEqual(mailing, billing):
   if mailing == billing:
@@ -297,3 +306,18 @@ def reserve_endpoint():
         return json.dumps(dataToReturn)
     else:
         return jsonify({'Alert!': 'Error somewhere!'}), 400
+
+  if request.method == 'POST':
+
+    isMember = request.form['isMember']
+    name = request.form['name']
+    phonenumber = request.form['number']
+    email = request.form['email']
+    reservationDay = request.form['reservationDay']
+    reservationStartTime = request.form['reservationStartTime']
+    reservationEndTime = request.form['reservationEndTime']
+    numGuests = request.form['numGuests']
+    if isMember == True:
+      username = request.form['username']
+
+    
