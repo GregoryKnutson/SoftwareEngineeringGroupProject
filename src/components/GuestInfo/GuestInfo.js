@@ -23,7 +23,7 @@ const GuestInfo = () => {
             let errors = {};
             if (nameState == '') errors.name = "Name can not be blank."
             if (nameState.length > 45) errors.name = "Name is too long."
-            if (numberState.length != 12) {
+            if (numberState.length != 10) {
                 errors.number = "Invalid phonenumber."
             }
             if (isNaN(numberState)) errors.number = "Invalid phonenumber."

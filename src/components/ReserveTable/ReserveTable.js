@@ -110,7 +110,7 @@ const ReserveTable = () => {
         let endTime = getTimeString(endTimeState)
     
         const formData = new FormData();
-        formData.append('ismember', isLoggedIn)
+        formData.append('isMember', isLoggedIn)
         formData.append('name', nameState)
         formData.append('number', numberState)
         formData.append('email', emailState)
