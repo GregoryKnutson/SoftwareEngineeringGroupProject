@@ -2,6 +2,7 @@ import React, { useEffect, useState, setError } from "react";
 import { Redirect, Link } from 'react-router-dom';
 import { checkAuth, setAuth, destroyAuth } from '../../verifyLogin';
 import './Login.scss'
+import NavBarGuest from '../NavBar/NavBarGuest'
 
 const Login = () => {
 
@@ -56,6 +57,7 @@ const Login = () => {
 
     return(
       <div>
+        <NavBarGuest/>
       <div className="login">
           <div className="login__container">
           <div className="title">

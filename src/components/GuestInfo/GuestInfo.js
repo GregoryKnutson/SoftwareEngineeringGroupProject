@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Redirect, Link } from 'react-router-dom';
 import './GuestInfo.scss'
+import NavBarGuest from '../NavBar/NavBarGuest'
 
 const GuestInfo = () => {
 
@@ -51,6 +52,7 @@ const GuestInfo = () => {
 
     return(
       <div>
+        <NavBarGuest/>
       <div className="GuestInfo">
           <div className="GuestInfo__container">
           <div className="title">

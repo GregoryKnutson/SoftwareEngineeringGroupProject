@@ -6,6 +6,7 @@ import TimePicker from 'react-bootstrap-time-picker'
 import './ReserveTable.scss'
 import { checkAuth, getUserId } from "../../verifyLogin";
 import NavBar from "../NavBar/NavBar";
+import NavBarGuest from "../NavBar/NavBarGuest"
 
 const ReserveTable = () => {
 
@@ -152,7 +153,7 @@ const ReserveTable = () => {
       <div className="reserveTable">
           {isLoggedIn
           ? <NavBar></NavBar>
-          : <div></div>
+          : <NavBarGuest></NavBarGuest>
           }
           <div className="reserveTable__container">
           <div className="title">
