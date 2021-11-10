@@ -314,6 +314,7 @@ def reserve_endpoint():
     NUM_SIX_TABLE = 4
     NUM_FOUR_TABLE = 4
     NUM_TWO_TABLE = 4
+    MAX_PARTY_SIZE = 80
 
     isMember = request.form['isMember']
     name = request.form['name']
@@ -327,7 +328,8 @@ def reserve_endpoint():
       username = request.form['username']
       user = Userinfo.query.filter_by(usercredentials_username = username).first()
 
-    currReservations = Reservations.query.filter((Reservations.reservationday == reservationDay) & (Reservations.reservationstarttime >= reservationStartTime) & (Reservations.reservationendtime <= reservationEndTime)).all()
+    currReservations = Reservations.query.filter((Reservations.reservationday == reservationDay) & (Reservations.reservationstarttime >= reservationStartTime) & 
+    (Reservations.reservationendtime <= reservationEndTime)).all()
     for res in currReservations:
       NUM_EIGHT_TABLE = NUM_EIGHT_TABLE - res.numeighttable
       NUM_SIX_TABLE = NUM_SIX_TABLE - res.numsixtable
@@ -340,7 +342,7 @@ def reserve_endpoint():
     currFourTable = 0
     currTwoTable = 0
 
-    while currNumGuests > 0:
+    while currNumGuests > 0 and currNumGuests <= MAX_PARTY_SIZE:
       print(currNumGuests)
       if currNumGuests >= 8 and NUM_EIGHT_TABLE > 0:
         currNumGuests = currNumGuests - 8
@@ -363,8 +365,6 @@ def reserve_endpoint():
     print(currSixTable)
     print(currFourTable)
     print(currTwoTable)
-
-
 
     return 'success'
 
