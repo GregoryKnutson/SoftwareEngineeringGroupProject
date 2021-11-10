@@ -75,12 +75,6 @@ class Reservations(db.Model):
   numfourtable = db.Column(db.Integer)
   numtwotable = db.Column(db.Integer)
 
-class Tables():
-  numEightTable = 4
-  numSixTable = 4
-  numFourTable = 4
-  numTwoTable = 4
-
 def areAddressEqual(mailing, billing):
   if mailing == billing:
     return True
@@ -286,6 +280,14 @@ def profile_endpoint():
         }
         return json.dumps(dataToReturn)
 
+# @app.route('/api/addRes', methods=['GET', 'POST'])
+# def addRes_endpoint():
+#   newRes = Reservations(ismember = True, userinfo_useridnum = 25, reservationday = '2021-11-18', reservationstarttime = '10:00:00', reservationendtime = "11:30:00",
+#   numpeople = 5, numeighttable = 0, numsixtable = 0, numfourtable = 1, numtwotable = 1)
+#   db.session.merge(newRes)
+#   db.session.commit()
+#   return "success"
+
 
 @app.route('/api/reserve', methods=['GET', 'POST'])
 def reserve_endpoint():
@@ -308,6 +310,10 @@ def reserve_endpoint():
         return jsonify({'Alert!': 'Error somewhere!'}), 400
 
   if request.method == 'POST':
+    NUM_EIGHT_TABLE = 4
+    NUM_SIX_TABLE = 4
+    NUM_FOUR_TABLE = 4
+    NUM_TWO_TABLE = 4
 
     isMember = request.form['isMember']
     name = request.form['name']
@@ -317,7 +323,49 @@ def reserve_endpoint():
     reservationStartTime = request.form['reservationStartTime']
     reservationEndTime = request.form['reservationEndTime']
     numGuests = request.form['numGuests']
-    if isMember == True:
+    if isMember == 'True':
       username = request.form['username']
+      user = Userinfo.query.filter_by(usercredentials_username = username).first()
+
+    currReservations = Reservations.query.filter((Reservations.reservationday == reservationDay) & (Reservations.reservationstarttime >= reservationStartTime) & (Reservations.reservationendtime <= reservationEndTime)).all()
+    for res in currReservations:
+      NUM_EIGHT_TABLE = NUM_EIGHT_TABLE - res.numeighttable
+      NUM_SIX_TABLE = NUM_SIX_TABLE - res.numsixtable
+      NUM_FOUR_TABLE = NUM_FOUR_TABLE - res.numfourtable
+      NUM_TWO_TABLE = NUM_TWO_TABLE - res.numtwotable
+
+    currNumGuests = int(numGuests)
+    currEightTable = 0
+    currSixTable = 0
+    currFourTable = 0
+    currTwoTable = 0
+
+    while currNumGuests > 0:
+      print(currNumGuests)
+      if currNumGuests >= 8 and NUM_EIGHT_TABLE > 0:
+        currNumGuests = currNumGuests - 8
+        currEightTable += 1
+        continue
+      if currNumGuests >= 6 and NUM_SIX_TABLE > 0:
+        currNumGuests = currNumGuests - 6
+        currSixTable += 1
+        continue
+      if currNumGuests >= 4 and NUM_FOUR_TABLE > 0:
+        currNumGuests = currNumGuests - 4
+        currFourTable += 1
+        continue
+      if currNumGuests >= 2 and NUM_EIGHT_TABLE > 0:
+        currNumGuests = currNumGuests - 2
+        currTwoTable += 1
+        continue
+
+    print(currEightTable)
+    print(currSixTable)
+    print(currFourTable)
+    print(currTwoTable)
+
+
+
+    return 'success'
 
     

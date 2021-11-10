@@ -33,7 +33,7 @@
     "webpack-dev-server": "^3.11.2"
   },
   "scripts": {
-    "start": "webpack serve --open --mode development --config webpack.config.js",
+    "start": "webpack serve --open --mode development --config webpack.config.js --port 8080",
     "start-api": "cd api && venv\\Scripts\\activate && flask run",
     "start-api-mac": "cd api && source venv/bin/activate && flask run",
     "build": "webpack --mode production --config webpack.config.js",
