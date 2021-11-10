@@ -6,6 +6,7 @@ import TimePicker from 'react-bootstrap-time-picker'
 import './ReserveTable.scss'
 import { checkAuth, getUserId } from "../../verifyLogin";
 import NavBar from "../NavBar/NavBar";
+import NavBarGuest from "../NavBar/NavBarGuest"
 
 const ReserveTable = () => {
 
@@ -73,8 +74,8 @@ const ReserveTable = () => {
 
 
 
-  const handleReserve = () => {
-    
+  const handleReserve = (e) => {
+    e.preventDefault()
     function alertObject(obj){      
         for(var key in obj) {
         alert(obj[key]);
@@ -152,12 +153,13 @@ const ReserveTable = () => {
       <div className="reserveTable">
           {isLoggedIn
           ? <NavBar></NavBar>
-          : <div></div>
+          : <NavBarGuest></NavBarGuest>
           }
           <div className="reserveTable__container">
           <div className="title">
           <h1>ReserveTable</h1>
           </div>
+          <form onSubmit = {handleReserve}>
               <div className="formbox">
               <div className= "in">
                   <label>Name:</label>
@@ -238,11 +240,11 @@ const ReserveTable = () => {
               <div className="button">
                   <input 
                       className="reserveButton"
-                      type= "button" 
+                      type= "submit" 
                       value="Reserve"
-                      onClick={handleReserve}
                   />
               </div>
+              </form>
           </div>
 
       </div>

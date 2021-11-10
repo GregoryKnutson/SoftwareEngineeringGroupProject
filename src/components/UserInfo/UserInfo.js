@@ -75,7 +75,8 @@ const UserInfo = () => {
       });
   }, []);
 
-  const SaveInfo = () => {
+  const SaveInfo = (e) => {
+    e.preventDefault()
     function alertObject(obj) {
       for (var key in obj) {
         alert(obj[key]);
@@ -182,6 +183,7 @@ const UserInfo = () => {
           <div className="title">
             <h1>User Information</h1>
           </div>
+          <form onSubmit = {SaveInfo}>
           <div className="formbox">
             <div className="in">
               <label>Name:</label>
@@ -240,11 +242,11 @@ const UserInfo = () => {
           <div className="button">
             <input
               className="reserveButton"
-              type="button"
+              type="submit"
               value="Update"
-              onClick={SaveInfo}
             />
           </div>
+          </form>
         </div>
       </div>
     </div>

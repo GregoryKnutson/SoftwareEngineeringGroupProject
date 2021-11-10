@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Redirect, Link } from 'react-router-dom';
 import './GuestInfo.scss'
+import NavBarGuest from '../NavBar/NavBarGuest'
 
 const GuestInfo = () => {
 
@@ -9,7 +10,8 @@ const GuestInfo = () => {
     const [emailState, setEmailState] = useState("")
     const [errorsState, setErrorsState] = useState({});
   
-    const SaveInfo = () => {
+    const SaveInfo = (e) => {
+        e.preventDefault()
         function alertObject(obj){      
             for(var key in obj) {
             alert(obj[key]);
@@ -51,11 +53,13 @@ const GuestInfo = () => {
 
     return(
       <div>
+        <NavBarGuest/>
       <div className="GuestInfo">
           <div className="GuestInfo__container">
           <div className="title">
           <h1>Guest Information</h1>
           </div>
+          <form onSubmit = {SaveInfo}>
               <div className="formbox">
               <div className= "in">
                   <label>Name:</label>
@@ -91,11 +95,11 @@ const GuestInfo = () => {
               <div className="button">
                   <input 
                       className="reserveButton"
-                      type= "button" 
+                      type= "submit" 
                       value="Continue"
-                      onClick={SaveInfo}
                   />
               </div>
+            </form>
           </div>
 
       </div>
