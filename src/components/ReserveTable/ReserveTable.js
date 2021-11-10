@@ -74,8 +74,8 @@ const ReserveTable = () => {
 
 
 
-  const handleReserve = () => {
-    
+  const handleReserve = (e) => {
+    e.preventDefault()
     function alertObject(obj){      
         for(var key in obj) {
         alert(obj[key]);
@@ -159,6 +159,7 @@ const ReserveTable = () => {
           <div className="title">
           <h1>ReserveTable</h1>
           </div>
+          <form onSubmit = {handleReserve}>
               <div className="formbox">
               <div className= "in">
                   <label>Name:</label>
@@ -239,11 +240,11 @@ const ReserveTable = () => {
               <div className="button">
                   <input 
                       className="reserveButton"
-                      type= "button" 
+                      type= "submit" 
                       value="Reserve"
-                      onClick={handleReserve}
                   />
               </div>
+              </form>
           </div>
 
       </div>

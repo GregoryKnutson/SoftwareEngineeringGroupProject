@@ -18,7 +18,8 @@ const Login = () => {
   const [passwordState, setPasswordState] = useState("")
   const [error, setError] = useState(false)
 
-  const handleLogin = () => {
+  const handleLogin = (e) => {
+    e.preventDefault()
     const formData = new FormData();
     formData.append("username", usernameState)
     formData.append("password", passwordState)
@@ -63,6 +64,7 @@ const Login = () => {
           <div className="title">
           <h1>Login</h1>
           </div>
+          <form onSubmit={handleLogin}>
               <div className="formbox">
               <div className= "in">
                   <label>Username:</label>
@@ -88,11 +90,11 @@ const Login = () => {
               <div className="button">
                   <input 
                       className="loginButton"
-                      type= "button" 
+                      type= "submit" 
                       value="Login"
-                      onClick={handleLogin}
                   />
               </div>
+            </form>
           </div>
           <div className="registerLink">
                 <label>Don't have an Account? Create one{'\u00A0'}</label>

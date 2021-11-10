@@ -9,7 +9,8 @@ const Register = () => {
     const [passwordState, setPasswordState] = useState("")
     const [confirmPasswordState, setConfirmPasswordState] = useState("")
 
-    const handleSubmit = () => {
+    const handleSubmit = (e) => {
+        e.preventDefault()
 
         if(passwordState === confirmPasswordState && usernameState !== ''){
             const formData = new FormData();
@@ -63,6 +64,7 @@ const Register = () => {
             <div className="title">
             <h1>Register</h1>
             </div>
+            <form onSubmit = {handleSubmit}>
                 <div className="formbox">
                     <div className= "in">
                         <label>Username:</label>
@@ -98,11 +100,11 @@ const Register = () => {
                 <div className="button">
                     <input 
                         className="registerButton"
-                        type= "button" 
+                        type= "submit" 
                         value="Register"
-                        onClick={handleSubmit}
                     />
                 </div>
+                </form>
             </div>
 
         </div>

@@ -10,7 +10,8 @@ const GuestInfo = () => {
     const [emailState, setEmailState] = useState("")
     const [errorsState, setErrorsState] = useState({});
   
-    const SaveInfo = () => {
+    const SaveInfo = (e) => {
+        e.preventDefault()
         function alertObject(obj){      
             for(var key in obj) {
             alert(obj[key]);
@@ -58,6 +59,7 @@ const GuestInfo = () => {
           <div className="title">
           <h1>Guest Information</h1>
           </div>
+          <form onSubmit = {SaveInfo}>
               <div className="formbox">
               <div className= "in">
                   <label>Name:</label>
@@ -93,11 +95,11 @@ const GuestInfo = () => {
               <div className="button">
                   <input 
                       className="reserveButton"
-                      type= "button" 
+                      type= "submit" 
                       value="Continue"
-                      onClick={SaveInfo}
                   />
               </div>
+            </form>
           </div>
 
       </div>
