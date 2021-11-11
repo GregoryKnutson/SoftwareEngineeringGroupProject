@@ -360,6 +360,7 @@ def reserve_endpoint():
     reservationStartTime = request.form['reservationStartTime']
     reservationEndTime = request.form['reservationEndTime']
     numGuests = request.form['numGuests']
+    dayOfTheWeek = request.form['dayOfTheWeek']
     if isMember == 'True':
       username = request.form['username']
       user = Userinfo.query.filter_by(usercredentials_username = username).first()
