@@ -12,6 +12,7 @@ import jwt
 from functools import wraps
 from werkzeug.security import generate_password_hash, check_password_hash
 import requests
+import holidays
 
 app = Flask(__name__)
 CORS(app)
@@ -292,14 +293,6 @@ def profile_endpoint():
         }
         return json.dumps(dataToReturn)
 
-@app.route('/api/addRes', methods=['GET', 'POST'])
-def addRes_endpoint():
-  newRes = Reservations(ismember = False, userinfo_useridnum = None, reservationday = '2021-11-18', reservationstarttime = '9:00:00', reservationendtime = "9:30:00",
-  numpeople = 5, numeighttable = 0, numsixtable = 0, numfourtable = 1, numtwotable = 0)
-  db.session.merge(newRes)
-  db.session.commit()
-  return "success"
-
 def getTableCombo(R, tables):
     if (R[len(R) - 1] == -1):
         return
@@ -353,6 +346,8 @@ def reserve_endpoint():
     MAX_PARTY_SIZE = 8
     table_sizes = [2, 4, 6, 8]
     isMember = request.form['isMember']
+    us_holidays = holidays.US()
+
     name = request.form['name']
     phonenumber = request.form['number']
     email = request.form['email']
@@ -361,6 +356,10 @@ def reserve_endpoint():
     reservationEndTime = request.form['reservationEndTime']
     numGuests = request.form['numGuests']
     dayOfTheWeek = request.form['dayOfTheWeek']
+    extraCharge = False
+    
+    if dayOfTheWeek == 'Fri' or dayOfTheWeek == 'Sat' or reservationDay in us_holidays:
+      extraCharge = True
     if isMember == 'True':
       username = request.form['username']
       user = Userinfo.query.filter_by(usercredentials_username = username).first()
@@ -387,7 +386,3 @@ def reserve_endpoint():
         avail[occup] = avail[occup] - used[occup]
     else:
       return make_response('No available seats', 400) 
-    
-      
-
-    
