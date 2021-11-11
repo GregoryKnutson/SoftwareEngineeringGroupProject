@@ -1,5 +1,6 @@
 import keys
 import json
+import sys
 from flask import Flask, request, session, json, make_response, jsonify
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
@@ -291,13 +292,38 @@ def profile_endpoint():
         }
         return json.dumps(dataToReturn)
 
-# @app.route('/api/addRes', methods=['GET', 'POST'])
-# def addRes_endpoint():
-#   newRes = Reservations(ismember = False, userinfo_useridnum = None, reservationday = '2021-11-18', reservationstarttime = '9:00:00', reservationendtime = "9:30:00",
-#   numpeople = 5, numeighttable = 0, numsixtable = 0, numfourtable = 1, numtwotable = 0)
-#   db.session.merge(newRes)
-#   db.session.commit()
-#   return "success"
+@app.route('/api/addRes', methods=['GET', 'POST'])
+def addRes_endpoint():
+  newRes = Reservations(ismember = False, userinfo_useridnum = None, reservationday = '2021-11-18', reservationstarttime = '9:00:00', reservationendtime = "9:30:00",
+  numpeople = 5, numeighttable = 0, numsixtable = 0, numfourtable = 1, numtwotable = 0)
+  db.session.merge(newRes)
+  db.session.commit()
+  return "success"
+
+def getTableCombo(R, tables):
+    if (R[len(R) - 1] == -1):
+        return
+    tables_used = {"2": 0, "4": 0, "6": 0, "8": 0}
+    start = len(R) - 1
+    while ( start != 0 ):
+        j = R[start]
+        tables_used[str(tables[j])] += 1
+        start = start - tables[j]
+    return tables_used
+
+def minTablesNeeded(total, tables, cap):
+        if total % 2 == 1:
+            total += 1
+        T = [sys.maxsize] * (total + 1)
+        R = [-1] * (total + 1)
+        T[0] = 0
+        for j in range(len(tables)):
+            for i in range(total + 1):
+                if i >= tables[j]:
+                    if T[i - tables[j]] + 1 < T[i] and cap[str(tables[j])] != 0:
+                        T[i] = 1 + T[i - tables[j]]
+                        R[i] = j
+        return getTableCombo(R, tables)
 
 @app.route('/api/reserve', methods=['GET', 'POST'])
 def reserve_endpoint():
@@ -324,7 +350,8 @@ def reserve_endpoint():
     NUM_SIX_TABLE = 4
     NUM_FOUR_TABLE = 4
     NUM_TWO_TABLE = 4
-
+    MAX_PARTY_SIZE = 8
+    table_sizes = [2, 4, 6, 8]
     isMember = request.form['isMember']
     name = request.form['name']
     phonenumber = request.form['number']
@@ -340,48 +367,26 @@ def reserve_endpoint():
     currReservations = Reservations.query.filter((Reservations.reservationday == reservationDay) & (Reservations.reservationstarttime >= reservationStartTime) & (Reservations.reservationstarttime <= reservationEndTime) | 
     (Reservations.reservationday == reservationDay) & (Reservations.reservationendtime >= reservationStartTime) & (Reservations.reservationendtime <= reservationEndTime)).all()
     for res in currReservations:
-      print(res.numpeople)
       NUM_EIGHT_TABLE = NUM_EIGHT_TABLE - res.numeighttable
       NUM_SIX_TABLE = NUM_SIX_TABLE - res.numsixtable
       NUM_FOUR_TABLE = NUM_FOUR_TABLE - res.numfourtable
       NUM_TWO_TABLE = NUM_TWO_TABLE - res.numtwotable
 
-    MAX_PARTY_SIZE = (NUM_EIGHT_TABLE * 8) + (NUM_SIX_TABLE * 6) + (NUM_FOUR_TABLE * 4) + (NUM_TWO_TABLE * 2)
+    avail = {"2": NUM_TWO_TABLE, "4": NUM_FOUR_TABLE, "6": NUM_SIX_TABLE, "8": NUM_EIGHT_TABLE}
     print(NUM_EIGHT_TABLE)
     print(NUM_SIX_TABLE)
     print(NUM_FOUR_TABLE)
     print(NUM_TWO_TABLE)
 
-    currNumGuests = int(numGuests)
-    currEightTable = 0
-    currSixTable = 0
-    currFourTable = 0
-    currTwoTable = 0
-
-    if currNumGuests <= MAX_PARTY_SIZE:
-      while currNumGuests > 0:
-        print(currNumGuests)
-        print(currEightTable)
-        print(currSixTable)
-        print(currFourTable)
-        print(currTwoTable)
-        if currNumGuests >= 8 and NUM_EIGHT_TABLE > 0:
-          currNumGuests = currNumGuests - 8
-          currEightTable += 1
-          continue
-        if currNumGuests >= 6 and NUM_SIX_TABLE > 0:
-          currNumGuests = currNumGuests - 6
-          currSixTable += 1
-          continue
-        if currNumGuests >= 4 and NUM_FOUR_TABLE > 0:
-          currNumGuests = currNumGuests - 4
-          currFourTable += 1
-          continue
-        if currNumGuests >= 2 and NUM_EIGHT_TABLE > 0:
-          currNumGuests = currNumGuests - 2
-          currTwoTable += 1
-          continue
+    if numGuests <= MAX_PARTY_SIZE:
+      used = minTablesNeeded(numGuests, table_sizes, avail)
+      for occup in used:
+        if avail[occup] - used[occup] < 0:
+          return make_response('No available seats', 400)
+        avail[occup] = avail[occup] - used[occup]
     else:
-      return make_response('No available seats', 400)
+      return make_response('No available seats', 400) 
+    
+      
 
     
