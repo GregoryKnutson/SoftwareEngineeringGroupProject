@@ -131,11 +131,6 @@ def login_endpoint():
 
     return make_response('Unable to verify', 403, {'WWW-Authenticate': 'Basic realm: "Authentication failed!"'})
 
-@app.route('/test')
-def test_endpoint():
-      checkBillingAddress = Userinfo.query.filter((Userinfo.billingaddressid == 35) | (Userinfo.mailingaddressid == 35))
-      print(checkBillingAddress.count())
-      return ''
 
 @app.route('/api/profile', methods=['GET', 'POST'])
 def profile_endpoint():
@@ -143,11 +138,27 @@ def profile_endpoint():
   if request.method == 'POST':
     username = request.values.get('username')
     name = request.form['name']
+    if len(name) > 50:
+      return jsonify({'Alert!': 'Invalid Name!'}), 400
     phonenumber = request.form['phonenumber']
+    if len(phonenumber) != 10:
+      return jsonify({'Alert!': 'Invalid Number!'}), 400
     email = request.form['email']
+    if len(email) > 45:
+      return jsonify({'Alert!': 'Invalid Email!'}), 400
 
     billingAddress = json.loads(request.form['billingAddress'])
     mailingAddress = json.loads(request.form['mailingAddress'])
+    if len(billingAddress['address']) > 50 or len(mailingAddress['address']) > 50:
+      return jsonify({'Alert!': 'Invalid Address!'}), 400
+    if len(billingAddress['city']) > 20 or len(mailingAddress['city']) > 20:
+      return jsonify({'Alert!': 'Invalid City!'}), 400
+    if len(billingAddress['state']) != 2 or len(mailingAddress['state']) != 2:
+      return jsonify({'Alert!': 'Invalid State!'}), 400
+    if (len(billingAddress['zip']) < 5 or len(billingAddress['zip']) > 9):
+      return jsonify({'Alert!': 'Invalid Zipcode!'}), 400
+    if (len(mailingAddress['zip']) < 5 or len(mailingAddress['zip']) > 9):
+      return jsonify({'Alert!': 'Invalid Zipcode!'}), 400
 
     print(billingAddress)
     print(mailingAddress)
@@ -280,14 +291,13 @@ def profile_endpoint():
         }
         return json.dumps(dataToReturn)
 
-@app.route('/api/addRes', methods=['GET', 'POST'])
-def addRes_endpoint():
-  newRes = Reservations(ismember = False, userinfo_useridnum = None, reservationday = '2021-11-18', reservationstarttime = '9:00:00', reservationendtime = "9:30:00",
-  numpeople = 5, numeighttable = 0, numsixtable = 0, numfourtable = 1, numtwotable = 0)
-  db.session.merge(newRes)
-  db.session.commit()
-  return "success"
-
+# @app.route('/api/addRes', methods=['GET', 'POST'])
+# def addRes_endpoint():
+#   newRes = Reservations(ismember = False, userinfo_useridnum = None, reservationday = '2021-11-18', reservationstarttime = '9:00:00', reservationendtime = "9:30:00",
+#   numpeople = 5, numeighttable = 0, numsixtable = 0, numfourtable = 1, numtwotable = 0)
+#   db.session.merge(newRes)
+#   db.session.commit()
+#   return "success"
 
 @app.route('/api/reserve', methods=['GET', 'POST'])
 def reserve_endpoint():

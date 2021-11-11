@@ -97,9 +97,9 @@ const UserInfo = () => {
       if (emailState == "") errors.email = "Email can not be blank.";
       if (emailState.length > 45) errors.email = "Email is too long.";
 
-      if (billingAddress.address.length > 20) errors.billingAddress = "Billing address is too long."
+      if (billingAddress.address.length > 50) errors.billingAddress = "Billing address is too long."
       if (billingAddress.address.length == '') errors.billingAddress = "Billing address can not be blank."
-      if (mailingAddress.address.length > 20) errors.mailingAddress = "Mailing address is too long."
+      if (mailingAddress.address.length > 50) errors.mailingAddress = "Mailing address is too long."
       if (mailingAddress.address.length == '') errors.mailingAddress = "Mailing address can not be blank."
       if (billingAddress.city.length > 20) errors.city = "Billing address city is too long."
       if (billingAddress.city.length == '') errors.city = "Billing address city can not be blank."
