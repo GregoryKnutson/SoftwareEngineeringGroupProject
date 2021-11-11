@@ -7,7 +7,7 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import relationship
 import pymysql
 import mysql
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 import jwt
 from functools import wraps
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -331,7 +331,6 @@ def reserve_endpoint():
             "phonenumber": user.phonenumber,
             "email": user.email
         }
-
         print(dataToReturn)
 
         return json.dumps(dataToReturn)
@@ -357,7 +356,7 @@ def reserve_endpoint():
     numGuests = request.form['numGuests']
     dayOfTheWeek = request.form['dayOfTheWeek']
     extraCharge = False
-    
+
     if dayOfTheWeek == 'Fri' or dayOfTheWeek == 'Sat' or reservationDay in us_holidays:
       extraCharge = True
     if isMember == 'True':
@@ -386,3 +385,22 @@ def reserve_endpoint():
         avail[occup] = avail[occup] - used[occup]
     else:
       return make_response('No available seats', 400) 
+
+@app.route('/api/reservations', methods=['GET'])
+def history_endpoint():
+  username = request.values.get('username')
+  user = Userinfo.query.filter_by(usercredentials_username = username).first()
+  today = date.today()
+  time = datetime.now().time()
+  time = time.strftime('%H:%M:%S')
+  reservations = Reservations.query.filter((Reservations.userinfo_useridnum == user.useridnum) & ((Reservations.reservationday > today) | ((Reservations.reservationday == today) & (Reservations.reservationstarttime > time)))).all()
+
+  if reservations:
+    data = []
+
+    for res in reservations:
+      data.append({"reservationNum": str(res.reservationnumber), "reservationDate": str(res.reservationday), "reservationStartTime": str(res.reservationstarttime), "reservationEndTime": str(res.reservationendtime), "numGuests": str(res.numpeople)})
+
+    return json.dumps(data)
+  else:
+    return jsonify({'No reservations found!'})

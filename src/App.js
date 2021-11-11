@@ -6,6 +6,7 @@ import Login from './components/Login/Login'
 import ReserveTable from './components/ReserveTable/ReserveTable'
 import UserInfo from "./components/UserInfo/UserInfo";
 import GuestInfo from "./components/GuestInfo/GuestInfo";
+import Reservations from "./components/EditReservations/EditReservations";
 
 const App = () => {
 
@@ -20,6 +21,7 @@ const App = () => {
         <PrivateRoute path="/profile" component={UserInfo} />
         <Route path="/guest" component={GuestInfo} />
         <Route path="/reserve" component={ReserveTable} />
+        <Route path="/reservations" component={Reservations} />
       </Switch>
     </BrowserRouter>
   );
