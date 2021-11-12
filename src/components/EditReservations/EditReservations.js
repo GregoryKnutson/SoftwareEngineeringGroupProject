@@ -27,7 +27,7 @@ const Reservations = () => {
             )
             .then((response) => response.json())
             .then((data) => {
-                console.log(data);
+                //console.log(data);
                 setLoggedIn(true)
                 setReservations(data)
             })

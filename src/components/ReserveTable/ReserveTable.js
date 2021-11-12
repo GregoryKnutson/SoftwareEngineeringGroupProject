@@ -151,7 +151,7 @@ const ReserveTable = () => {
   }
 
     return(
-      <div>
+      <div id="bootstrap-overides">
       <div className="reserveTable">
           {isLoggedIn
           ? <NavBar></NavBar>
@@ -219,7 +219,7 @@ const ReserveTable = () => {
                       </div>
                       <div className = "reservation_end">
                           <label>Reservation Ending Time:</label>
-                          <TimePicker
+                          <TimePicker className="TableTimePicker"
                           start="10:00"
                           end="22:00"
                           onChange = {setEndTimeState}

@@ -386,8 +386,12 @@ def reserve_endpoint():
     else:
       return make_response('No available seats', 400) 
 
+@app.route('/api/editReservation', methods=['GET', 'POST'])
+def addRes_endpoint():
+  return "success"
+
 @app.route('/api/reservations', methods=['GET'])
-def history_endpoint():
+def reservations_endpoint():
   username = request.values.get('username')
   user = Userinfo.query.filter_by(usercredentials_username = username).first()
   today = date.today()
@@ -404,3 +408,11 @@ def history_endpoint():
     return json.dumps(data)
   else:
     return jsonify({'No reservations found!'})
+
+# @app.route('/api/addRes', methods=['GET', 'POST'])
+# def addRes_endpoint():
+#   newRes = Reservations(ismember = 1, userinfo_useridnum = 5, reservationday = '2021-11-18', reservationstarttime = '15:00:00', reservationendtime = "15:30:00",
+#   numpeople = 5, numeighttable = 0, numsixtable = 0, numfourtable = 1, numtwotable = 1)
+#   db.session.merge(newRes)
+#   db.session.commit()
+#   return "success"
