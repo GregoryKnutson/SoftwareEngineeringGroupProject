@@ -7,11 +7,12 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import relationship
 import pymysql
 import mysql
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 import jwt
 from functools import wraps
 from werkzeug.security import generate_password_hash, check_password_hash
 import requests
+import holidays
 
 app = Flask(__name__)
 CORS(app)
@@ -132,11 +133,6 @@ def login_endpoint():
 
     return make_response('Unable to verify', 403, {'WWW-Authenticate': 'Basic realm: "Authentication failed!"'})
 
-@app.route('/test')
-def test_endpoint():
-      checkBillingAddress = Userinfo.query.filter((Userinfo.billingaddressid == 35) | (Userinfo.mailingaddressid == 35))
-      print(checkBillingAddress.count())
-      return ''
 
 @app.route('/api/profile', methods=['GET', 'POST'])
 def profile_endpoint():
@@ -144,11 +140,27 @@ def profile_endpoint():
   if request.method == 'POST':
     username = request.values.get('username')
     name = request.form['name']
+    if len(name) > 50:
+      return jsonify({'Alert!': 'Invalid Name!'}), 400
     phonenumber = request.form['phonenumber']
+    if len(phonenumber) != 10:
+      return jsonify({'Alert!': 'Invalid Number!'}), 400
     email = request.form['email']
+    if len(email) > 45:
+      return jsonify({'Alert!': 'Invalid Email!'}), 400
 
     billingAddress = json.loads(request.form['billingAddress'])
     mailingAddress = json.loads(request.form['mailingAddress'])
+    if len(billingAddress['address']) > 50 or len(mailingAddress['address']) > 50:
+      return jsonify({'Alert!': 'Invalid Address!'}), 400
+    if len(billingAddress['city']) > 20 or len(mailingAddress['city']) > 20:
+      return jsonify({'Alert!': 'Invalid City!'}), 400
+    if len(billingAddress['state']) != 2 or len(mailingAddress['state']) != 2:
+      return jsonify({'Alert!': 'Invalid State!'}), 400
+    if (len(billingAddress['zip']) < 5 or len(billingAddress['zip']) > 9):
+      return jsonify({'Alert!': 'Invalid Zipcode!'}), 400
+    if (len(mailingAddress['zip']) < 5 or len(mailingAddress['zip']) > 9):
+      return jsonify({'Alert!': 'Invalid Zipcode!'}), 400
 
     print(billingAddress)
     print(mailingAddress)
@@ -281,7 +293,6 @@ def profile_endpoint():
         }
         return json.dumps(dataToReturn)
 
-
 def getTableCombo(R, tables):
     tables_used = {"2": 0, "4": 0, "6": 0, "8": 0}
     if (R[len(R) - 1] == -1):
@@ -326,7 +337,6 @@ def reserve_endpoint():
             "phonenumber": user.phonenumber,
             "email": user.email
         }
-
         print(dataToReturn)
 
         return json.dumps(dataToReturn)
@@ -341,6 +351,8 @@ def reserve_endpoint():
     MAX_PARTY_SIZE = 80
     table_sizes = [2, 4, 6, 8]
     isMember = request.form['isMember']
+    us_holidays = holidays.US()
+
     name = request.form['name']
     phonenumber = request.form['number']
     email = request.form['email']
@@ -348,6 +360,11 @@ def reserve_endpoint():
     reservationStartTime = request.form['reservationStartTime']
     reservationEndTime = request.form['reservationEndTime']
     numGuests = request.form['numGuests']
+    dayOfTheWeek = request.form['dayOfTheWeek']
+    extraCharge = False
+
+    if dayOfTheWeek == 'Fri' or dayOfTheWeek == 'Sat' or reservationDay in us_holidays:
+      extraCharge = True
     if isMember == 'True':
       username = request.form['username']
       user = Userinfo.query.filter_by(usercredentials_username = username).first()
@@ -379,8 +396,34 @@ def reserve_endpoint():
       db.session.commit()
     else:
       return make_response('No available seats', 400) 
-    return "success"
-    
-      
 
-    
+@app.route('/api/editReservation', methods=['GET', 'POST'])
+def addRes_endpoint():
+  return "success"
+
+@app.route('/api/reservations', methods=['GET'])
+def reservations_endpoint():
+  username = request.values.get('username')
+  user = Userinfo.query.filter_by(usercredentials_username = username).first()
+  today = date.today()
+  time = datetime.now().time()
+  time = time.strftime('%H:%M:%S')
+  reservations = Reservations.query.filter((Reservations.userinfo_useridnum == user.useridnum) & ((Reservations.reservationday > today) | ((Reservations.reservationday == today) & (Reservations.reservationstarttime > time)))).all()
+
+  if reservations:
+    data = []
+
+    for res in reservations:
+      data.append({"reservationNum": str(res.reservationnumber), "reservationDate": str(res.reservationday), "reservationStartTime": str(res.reservationstarttime), "reservationEndTime": str(res.reservationendtime), "numGuests": str(res.numpeople)})
+
+    return json.dumps(data)
+  else:
+    return jsonify({'No reservations found!'})
+
+# @app.route('/api/addRes', methods=['GET', 'POST'])
+# def addRes_endpoint():
+#   newRes = Reservations(ismember = 1, userinfo_useridnum = 5, reservationday = '2021-11-18', reservationstarttime = '15:00:00', reservationendtime = "15:30:00",
+#   numpeople = 5, numeighttable = 0, numsixtable = 0, numfourtable = 1, numtwotable = 1)
+#   db.session.merge(newRes)
+#   db.session.commit()
+#   return "success"

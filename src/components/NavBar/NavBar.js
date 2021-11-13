@@ -26,6 +26,15 @@ const NavBar = () => {
             </NavLink>
             <NavLink 
                 className='nav-item'
+                to="/reservations"
+                exact
+                activeStyle={{
+                    fontWeight: 800,
+                }}>
+                Reservations
+            </NavLink>
+            <NavLink 
+                className='nav-item'
                 to="/profile"
                 activeStyle={{
                     fontWeight: 800,

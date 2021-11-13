@@ -106,6 +106,7 @@ const ReserveTable = () => {
     const errors = validate();
 
     if (Object.keys(errors).length === 0){
+        let dayOfTheWeek = dateState.toString().substr(0, 3)
         let dayString = dateState.toISOString().substr(0, 10)
         let startTime = getTimeString(startTimeState)
         let endTime = getTimeString(endTimeState)
@@ -119,6 +120,7 @@ const ReserveTable = () => {
         formData.append('reservationStartTime', startTime)
         formData.append('reservationEndTime', endTime)
         formData.append('numGuests', numGuestsState)
+        formData.append('dayOfTheWeek', dayOfTheWeek)
         if(isLoggedIn){
             formData.append('username', getUserId())
         }
@@ -149,7 +151,7 @@ const ReserveTable = () => {
   }
 
     return(
-      <div>
+      <div id="bootstrap-overides">
       <div className="reserveTable">
           {isLoggedIn
           ? <NavBar></NavBar>
@@ -217,7 +219,7 @@ const ReserveTable = () => {
                       </div>
                       <div className = "reservation_end">
                           <label>Reservation Ending Time:</label>
-                          <TimePicker
+                          <TimePicker className="TableTimePicker"
                           start="10:00"
                           end="22:00"
                           onChange = {setEndTimeState}
