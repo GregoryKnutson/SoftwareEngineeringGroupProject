@@ -7,6 +7,7 @@ import './ReserveTable.scss'
 import { checkAuth, getUserId } from "../../verifyLogin";
 import NavBar from "../NavBar/NavBar";
 import NavBarGuest from "../NavBar/NavBarGuest"
+import ConfirmModal from "./confirmModal"
 
 const ReserveTable = () => {
 
@@ -65,91 +66,6 @@ const ReserveTable = () => {
         }
   }, [])
 
-  const getTimeString = (seconds) => {
-      var date = new Date(0);
-      date.setSeconds(seconds)
-      var timeString = date.toISOString().substr(11, 8)
-      return timeString
-  }
-
-
-
-  const handleReserve = (e) => {
-    e.preventDefault()
-    function alertObject(obj){      
-        for(var key in obj) {
-        alert(obj[key]);
-        if( typeof obj[key] === 'object' ) {
-            alertObject(obj[key]);
-        }
-        }
-    }
-    
-    const validate = () =>{
-        let errors = {};
-        if (nameState == '') errors.name = "Name can not be blank."
-        if (nameState.length > 45) errors.name = "Name is too long."
-        if (numberState.length != 10) errors.number = "Invalid phonenumber."
-        if (isNaN(numberState)) errors.number = "Invalid phonenumber."
-        if (numberState.length == '') errors.email = "Email can not be blank"
-        if (emailState == '') errors.email = "Email can not be blank."
-        if (emailState.length > 45) errors.email = "Email is too long."
-        if (numGuestsState <= 0) errors.guest = "Invalid number of guests."
-        if (startTimeState >= endTimeState) errors.time = "Starting time can not be greater than or equal to ending time."
-        if (dateState == null) errors.date = "Please select a date."
-    
-        if (Object.keys(errors) !== 0){
-          return errors
-        }
-      }
-
-    const errors = validate();
-
-    if (Object.keys(errors).length === 0){
-        let dayOfTheWeek = dateState.toString().substr(0, 3)
-        let dayString = dateState.toISOString().substr(0, 10)
-        let startTime = getTimeString(startTimeState)
-        let endTime = getTimeString(endTimeState)
-    
-        const formData = new FormData();
-        formData.append('isMember', isLoggedIn)
-        formData.append('name', nameState)
-        formData.append('number', numberState)
-        formData.append('email', emailState)
-        formData.append('reservationDay', dayString)
-        formData.append('reservationStartTime', startTime)
-        formData.append('reservationEndTime', endTime)
-        formData.append('numGuests', numGuestsState)
-        formData.append('dayOfTheWeek', dayOfTheWeek)
-        if(isLoggedIn){
-            formData.append('username', getUserId())
-        }
-  
-        fetch(
-          `${process.env.API_URL}/api/reserve`,
-          {
-            method: "POST",
-            mode: "no-cors",
-            body: formData,
-          }
-        )
-          .then((response) => response.json)
-          .then((result) => {
-            console.log("Success: ", result);
-            alert("Thank you! Submission Complete!")
-            //window.location.assign("/home")
-  
-          })
-          .catch((error) => {
-            console.error("Error: ", error);
-          });
-        
-      }
-      else {
-        alertObject(errors)
-      }
-  }
-
     return(
       <div id="bootstrap-overides">
       <div className="reserveTable">
@@ -161,7 +77,7 @@ const ReserveTable = () => {
           <div className="title">
           <h1>ReserveTable</h1>
           </div>
-          <form onSubmit = {handleReserve}>
+          <form>
               <div className="formbox">
               <div className= "in">
                   <label>Name:</label>
@@ -239,13 +155,16 @@ const ReserveTable = () => {
                   />
               </div>
               </div>
-              <div className="button">
-                  <input 
-                      className="reserveButton"
-                      type= "submit" 
-                      value="Reserve"
-                  />
-              </div>
+              <ConfirmModal
+                name={nameState}
+                number={numberState}
+                email={emailState}
+                date={dateState}
+                startTime={startTimeState}
+                endTime={endTimeState}
+                numGuests={numGuestsState}
+                isLoggedIn={isLoggedIn}
+              />
               </form>
           </div>
 

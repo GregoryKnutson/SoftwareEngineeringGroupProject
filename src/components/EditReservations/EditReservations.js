@@ -2,11 +2,11 @@ import React, { useEffect, useState } from "react";
 import { Redirect, Link } from 'react-router-dom';
 import { checkAuth, getUserId } from "../../verifyLogin";
 import NavBar from "../NavBar/NavBar";
-import NavBarGuest from "../NavBar/NavBarGuest"
+import NavBarGuest from "../NavBar/NavBarGuest";
 import * as ReactBootstrap from "react-bootstrap";
 import 'bootstrap/dist/css/bootstrap.min.css';
-import './EditReservations.scss'
-import EditModal from './EditModal'
+import './EditReservations.scss';
+import EditModal from './EditModal';
 
 
 
@@ -27,7 +27,11 @@ const Reservations = () => {
             )
             .then((response) => response.json())
             .then((data) => {
-                //console.log(data);
+                console.log(data);
+                if (data.length === 0){
+                    alert("No current reservations.")
+                    window.location.assign("/reserve")
+                }
                 setLoggedIn(true)
                 setReservations(data)
             })
