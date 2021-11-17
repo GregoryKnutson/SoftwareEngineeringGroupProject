@@ -62,7 +62,9 @@ const getTimeString = (seconds) => {
     const handleClickOpen = (e) => {
       e.preventDefault()
       setReservationNum(obj.reservationNum)
-      var resDate = new Date(obj.reservationDate)
+      var dateArray = obj.reservationDate.split('-')
+
+      var resDate = new Date(dateArray[0], dateArray[1], dateArray[2])
       setDateState(resDate)
       setStartTimeState(hmsToSecondsOnly(obj.reservationStartTime))
       setEndTimeState(hmsToSecondsOnly(obj.reservationEndTime))
@@ -84,7 +86,8 @@ const getTimeString = (seconds) => {
           let endTime = getTimeString(endTimeState)
       
           const formData = new FormData();
-          formData.append('isMember', "True")
+          formData.append('isMember', "true")
+          formData.append('reservationNum', reservationNum)
           formData.append('reservationDay', dayString)
           formData.append('reservationStartTime', startTime)
           formData.append('reservationEndTime', endTime)

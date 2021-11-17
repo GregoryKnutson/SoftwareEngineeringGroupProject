@@ -56,8 +56,6 @@ const UserInfo = () => {
     )
       .then((response) => response.json())
       .then((result) => {
-
-
         console.log("Success: ", result);
         setNameState(result.name);
         setNumberState(result.phonenumber);
@@ -85,6 +83,8 @@ const UserInfo = () => {
         }
       }
     }
+    console.log(mailingAddress)
+    console.log(billingAddress)
 
     const validate = () => {
       let errors = {};
@@ -107,8 +107,8 @@ const UserInfo = () => {
       if (mailingAddress.city.length == '') errors.city = "Mailing address city can not be blank."
       if (billingAddress.state.length != 2) errors.state = "Please select a state."
       if (mailingAddress.state.length != 2) errors.city = "Please select a state."
-      if (billingAddress.zip.length < 5 || billingAddress.zip.length > 9) errors.zip = "Please Enter Valid Zip Code."
-      if (mailingAddress.zip.length < 5 || mailingAddress.zip.length > 9) errors.zip = "Please Enter Valid Zip Code."
+      if (billingAddress.zip.length < 5 || billingAddress.zip.length > 9) errors.zip = "Please Enter Valid Zip Code for Billing Address."
+      if (mailingAddress.zip.length < 5 || mailingAddress.zip.length > 9) errors.zip = "Please Enter Valid Zip Code for Mailing Address."
       
 
       if (Object.keys(errors) !== 0) {

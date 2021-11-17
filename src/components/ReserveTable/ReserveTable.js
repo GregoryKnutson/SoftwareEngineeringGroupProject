@@ -75,7 +75,7 @@ const ReserveTable = () => {
           }
           <div className="reserveTable__container">
           <div className="title">
-          <h1>Reserve your table.</h1>
+          <h1>Reserve Table</h1>
           </div>
           <form>
               <div className="formbox">

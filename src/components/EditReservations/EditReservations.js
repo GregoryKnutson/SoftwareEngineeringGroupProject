@@ -27,7 +27,6 @@ const Reservations = () => {
             )
             .then((response) => response.json())
             .then((data) => {
-                console.log(data);
                 if (data.length === 0){
                     alert("No current reservations.")
                     window.location.assign("/reserve")
