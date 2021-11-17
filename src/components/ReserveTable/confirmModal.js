@@ -101,28 +101,33 @@ function alertObject(obj){
               formData.append('reservationStartTime', startTime)
               formData.append('reservationEndTime', endTime)
               formData.append('numGuests', obj.numGuests)
+              formData.append('extraCharge', feeState)
               if(obj.isLoggedIn){
                   formData.append('username', getUserId())
               }
         
-              fetch(
-                `${process.env.API_URL}/api/reserve`,
-                {
-                  method: "POST",
-                  mode: "no-cors",
-                  body: formData,
+              fetch(`${process.env.API_URL}/api/reserve`,
+              {
+                method: 'POST',
+                body: formData,
+              }
+            )
+              .then(res => {
+                console.log({res})
+                if(!res.ok) {
+                  alert("Error: no available tables to match your request.");
+                  throw Error("No available tables.");
                 }
-              )
-                .then((response) => response.json)
-                .then((result) => {
-                  console.log("Success: ", result);
+                return res.json();
+              })
+              .then(res => {
+                  console.log("Success: ", res);
                   alert("Thank you! Submission Complete!")
-        
-                })
-                .catch((error) => {
-                  console.error("Error: ", error);
-                });
-                setOpen(false)
+              })
+              .catch((error) => {
+                console.error(error);
+              })
+              setOpen(false)
     }
     
     return(

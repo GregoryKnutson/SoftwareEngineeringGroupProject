@@ -63,7 +63,7 @@ const UserInfo = () => {
         setNumberState(result.phonenumber);
         setEmailState(result.email);
         setBillingAddress(result.billingAddress)
-
+        setMailingAddress(result.mailingAddress)
         if(!haveSameData(result.billingAddress, result.mailingAddress)){
           setChecked(false)
           setMailingAddress(result.mailingAddress)

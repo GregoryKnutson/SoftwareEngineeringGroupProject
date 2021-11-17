@@ -76,6 +76,7 @@ class Reservations(db.Model):
   numsixtable = db.Column(db.Integer)
   numfourtable = db.Column(db.Integer)
   numtwotable = db.Column(db.Integer)
+  extracharge = db.Column(db.Integer) 
 
 def areAddressEqual(mailing, billing):
   if mailing == billing:
@@ -157,9 +158,9 @@ def profile_endpoint():
       return jsonify({'Alert!': 'Invalid City!'}), 400
     if len(billingAddress['state']) != 2 or len(mailingAddress['state']) != 2:
       return jsonify({'Alert!': 'Invalid State!'}), 400
-    if (len(billingAddress['zip']) < 5 or len(billingAddress['zip']) > 9):
+    if (len(str(billingAddress['zip'])) < 5 or len(str(billingAddress['zip'])) > 9):
       return jsonify({'Alert!': 'Invalid Zipcode!'}), 400
-    if (len(mailingAddress['zip']) < 5 or len(mailingAddress['zip']) > 9):
+    if (len(str(mailingAddress['zip'])) < 5 or len(str(mailingAddress['zip'])) > 9):
       return jsonify({'Alert!': 'Invalid Zipcode!'}), 400
 
     print(billingAddress)
@@ -296,7 +297,7 @@ def profile_endpoint():
 def minTablesNeeded(n_guests, avail): #assuming there is always a valid solution is the main reason this works
         n_guests = n_guests if n_guests % 2 == 0 else n_guests + 1
         sub = {entry: avail[entry] for entry in avail if avail[entry] > 0} # just a copy of avail omitting the tables with 0 availability 
-        used = {entry: 0 for entry in sub}
+        used = {entry: 0 for entry in avail}
         ref = {key: sub[key] for key in sub} #for resetting sub when an invalid solution is used 
         temp = n_guests
         for i in sub:
@@ -311,7 +312,7 @@ def minTablesNeeded(n_guests, avail): #assuming there is always a valid solution
         if temp != 0 and n_guests <= 8: #for when we have to select a big table for a small party size
             sub = ref
             temp = n_guests
-            used = {entry: 0 for entry in sub}
+            used = {entry: 0 for entry in avail}
             for i in reversed(sub):
                 if int(i) > temp:
                     used[i] += 1
@@ -319,7 +320,7 @@ def minTablesNeeded(n_guests, avail): #assuming there is always a valid solution
         if temp != 0: #all other cases just take the smallest tables first until the capacity of all tables selected >= n_guests, no regard to optimal solution
             sub = ref
             temp = 0
-            used = {entry: 0 for entry in sub}
+            used = {entry: 0 for entry in avail}
             for i in reversed(sub):
                 while temp < n_guests and sub[i] != 0:
                     temp += int(i)
@@ -336,12 +337,11 @@ def holiday_endpoint():
     reservationDay = request.form['reservationDay']
     dayOfTheWeek = request.form['dayOfTheWeek']
     us_holidays = holidays.US()
-
+    print(dayOfTheWeek)
     if dayOfTheWeek == 'Fri' or dayOfTheWeek == 'Sat' or reservationDay in us_holidays:
       extraFee = 20
     else:
       extraFee = 0
-
     return json.dumps(extraFee)
 
 @app.route('/api/reserve', methods=['GET', 'POST'])
@@ -369,10 +369,7 @@ def reserve_endpoint():
     NUM_FOUR_TABLE = 4
     NUM_TWO_TABLE = 4
     MAX_PARTY_SIZE = 80
-    table_sizes = [2, 4, 6, 8]
     isMember = request.form['isMember']
-    us_holidays = holidays.US()
-
     name = request.form['name']
     phonenumber = request.form['number']
     email = request.form['email']
@@ -380,12 +377,8 @@ def reserve_endpoint():
     reservationStartTime = request.form['reservationStartTime']
     reservationEndTime = request.form['reservationEndTime']
     numGuests = int(request.form['numGuests'])
-    dayOfTheWeek = request.form['dayOfTheWeek']
-    extraCharge = False
-
-    if dayOfTheWeek == 'Fri' or dayOfTheWeek == 'Sat' or reservationDay in us_holidays:
-      extraCharge = True
-    if isMember == 'True':
+    extraCharge = int(request.form['extraCharge'])
+    if isMember == 'true':
       username = request.form['username']
       user = Userinfo.query.filter_by(usercredentials_username = username).first()
       userid = user.useridnum
@@ -399,22 +392,24 @@ def reserve_endpoint():
       NUM_FOUR_TABLE = NUM_FOUR_TABLE - res.numfourtable
       NUM_TWO_TABLE = NUM_TWO_TABLE - res.numtwotable
 
-    avail = {"2": NUM_TWO_TABLE, "4": NUM_FOUR_TABLE, "6": NUM_SIX_TABLE, "8": NUM_EIGHT_TABLE}
+    avail = {"8": NUM_EIGHT_TABLE, "6": NUM_SIX_TABLE, "4": NUM_FOUR_TABLE, "2": NUM_TWO_TABLE}
     sum = 0
+    print("Available tables:")
     for en in avail:
       sum += int(en) * avail[en]
-      print(avail[en])
+      print("%d tables of size %s" %(avail[en], en))
     if numGuests <= MAX_PARTY_SIZE or numGuests <= sum:
       used = minTablesNeeded(int(numGuests), avail)
       for occup in used:
         if used[occup]:
           print("Used %d table(s) of size %s" %(used[occup], occup))
       newReservation = Reservations(ismember = bool(isMember), userinfo_useridnum = userid, reservationday = reservationDay, reservationstarttime = reservationStartTime,
-                      reservationendtime = reservationEndTime, numpeople = numGuests, numtwotable = used["2"], numfourtable = used["4"], numsixtable = used["6"], numeighttable = used["8"])
+                      reservationendtime = reservationEndTime, numpeople = numGuests, numtwotable = used["2"], numfourtable = used["4"], numsixtable = used["6"], numeighttable = used["8"], extracharge = extraCharge)
       db.session.merge(newReservation)
       db.session.commit()
-      return make_response('Reservation made successfully.', 200)
+      return "Reserved successfully"
     else:
+      print('No available seats')
       return make_response('No available seats', 400) 
 
 @app.route('/api/editReservation', methods=['GET', 'POST'])

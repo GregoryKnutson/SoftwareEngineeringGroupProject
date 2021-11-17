@@ -15,6 +15,13 @@
     border: 1px solid black;
   }
 }
+.form-control{
+  padding: 0 !important;
+  padding-left: .5rem !important;
+}
+.form-control:hover{
+  cursor: pointer;
+}
 .title {
   padding-top: 10px;
   padding-left: 50px;
