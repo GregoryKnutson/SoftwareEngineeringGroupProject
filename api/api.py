@@ -76,6 +76,7 @@ class Reservations(db.Model):
   numsixtable = db.Column(db.Integer)
   numfourtable = db.Column(db.Integer)
   numtwotable = db.Column(db.Integer)
+  extracharge = db.Column(db.Integer)
 
 def areAddressEqual(mailing, billing):
   if mailing == billing:
@@ -379,9 +380,9 @@ def reserve_endpoint():
     reservationStartTime = request.form['reservationStartTime']
     reservationEndTime = request.form['reservationEndTime']
     numGuests = int(request.form['numGuests'])
-    extraCharge = False
+    extraCharge = int(request.form['extraCharge'])
     
-    if isMember == 'True':
+    if isMember == 'true':
       username = request.form['username']
       user = Userinfo.query.filter_by(usercredentials_username = username).first()
       userid = user.useridnum
@@ -406,7 +407,7 @@ def reserve_endpoint():
         if used[occup]:
           print("Used %d table(s) of size %s" %(used[occup], occup))
       newReservation = Reservations(ismember = bool(isMember), userinfo_useridnum = userid, reservationday = reservationDay, reservationstarttime = reservationStartTime,
-                      reservationendtime = reservationEndTime, numpeople = numGuests, numtwotable = used["2"], numfourtable = used["4"], numsixtable = used["6"], numeighttable = used["8"])
+                      reservationendtime = reservationEndTime, numpeople = numGuests, numtwotable = used["2"], numfourtable = used["4"], numsixtable = used["6"], numeighttable = used["8"], extracharge = extraCharge)
       db.session.merge(newReservation)
       db.session.commit()
       return make_response('Reservation made successfully.', 200)
@@ -415,7 +416,61 @@ def reserve_endpoint():
 
 @app.route('/api/editReservation', methods=['POST'])
 def editReservation_endpoint():
-  return "success"
+  if request.method == 'POST':
+    NUM_EIGHT_TABLE = 4
+    NUM_SIX_TABLE = 4
+    NUM_FOUR_TABLE = 4
+    NUM_TWO_TABLE = 4
+    MAX_PARTY_SIZE = 80
+    table_sizes = [2, 4, 6, 8]
+
+    reservationNum = request.form['reservationNum']
+    reservationDay = request.form['reservationDay']
+    reservationStartTime = request.form['reservationStartTime']
+    reservationEndTime = request.form['reservationEndTime']
+    numGuests = int(request.form['numGuests'])
+    dayOfTheWeek = request.form['dayOfTheWeek']
+    us_holidays = holidays.US()
+
+    if dayOfTheWeek == 'Fri' or dayOfTheWeek == 'Sat' or reservationDay in us_holidays:
+      extraFee = 20
+    else:
+      extraFee = 0
+
+    reservation = Reservations.query.filter_by(reservationnumber = reservationNum).first()
+
+    currReservations = Reservations.query.filter(((Reservations.reservationday == reservationDay) & (Reservations.reservationstarttime >= reservationStartTime) & (Reservations.reservationstarttime <= reservationEndTime) | 
+      (Reservations.reservationday == reservationDay) & (Reservations.reservationendtime >= reservationStartTime) & (Reservations.reservationendtime <= reservationEndTime)) & (Reservations.reservationnumber != reservationNum)).all()
+    for res in currReservations:
+          NUM_EIGHT_TABLE = NUM_EIGHT_TABLE - res.numeighttable
+          NUM_SIX_TABLE = NUM_SIX_TABLE - res.numsixtable
+          NUM_FOUR_TABLE = NUM_FOUR_TABLE - res.numfourtable
+          NUM_TWO_TABLE = NUM_TWO_TABLE - res.numtwotable
+
+    avail = {"8": NUM_EIGHT_TABLE, "6": NUM_SIX_TABLE,"4": NUM_FOUR_TABLE, "2": NUM_TWO_TABLE}
+    sum = 0
+    for en in avail:
+      sum += int(en) * avail[en]
+      print(avail[en])
+    if numGuests <= MAX_PARTY_SIZE or numGuests <= sum:
+      used = minTablesNeeded(int(numGuests), avail)
+      for occup in used:
+        if used[occup]:
+          print("Used %d table(s) of size %s" %(used[occup], occup))
+
+      reservation.reservationday = reservationDay
+      reservation.reservationstarttime = reservationStartTime
+      reservation.reservationendtime = reservationEndTime
+      reservation.numpeople = numGuests
+      reservation.numtwotable = used["2"]
+      reservation.numfourtable = used["4"]
+      reservation.numsixtable = used["6"]
+      reservation.numeighttable = used["8"]
+      reservation.extracharge = extraFee
+      db.session.commit()
+      return "success"
+    else:
+      return make_response('No available seats', 400) 
 
 @app.route('/api/reservations', methods=['GET'])
 def reservations_endpoint():
