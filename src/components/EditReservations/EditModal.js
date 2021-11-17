@@ -63,8 +63,12 @@ const getTimeString = (seconds) => {
       e.preventDefault()
       setReservationNum(obj.reservationNum)
       var dateArray = obj.reservationDate.split('-')
-
-      var resDate = new Date(dateArray[0], dateArray[1], dateArray[2])
+      var month = parseInt(dateArray[1])
+      month -= 1
+      var resDate = new Date(dateArray[0], month, dateArray[2])
+      console.log(dateArray[1])
+      console.log(obj.reservationDate)
+      console.log(resDate)
       setDateState(resDate)
       setStartTimeState(hmsToSecondsOnly(obj.reservationStartTime))
       setEndTimeState(hmsToSecondsOnly(obj.reservationEndTime))
