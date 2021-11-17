@@ -65,7 +65,25 @@ const ReserveTable = () => {
             }
         }
   }, [])
-
+  const handleGuestsChange = (e) => {
+    setNumGuestsState(e.target.value)
+    // console.log(e.target.value)
+    // const sen_ = new FormData();
+    // sen_.append('numGuests', e.target.value)
+    // fetch(`${process.env.API_URL}/api/avail`,
+    // {
+    //     method: 'POST',
+    //     body: sen_
+    // }
+    // )
+    // .then((response) => {
+    //     console.log(response)
+    //     return response.json()
+    // })
+    // .then((res) => {
+    //     console.log('Received: ', res)
+    // })
+  }
     return(
       <div id="bootstrap-overides">
       <div className="reserveTable">
@@ -151,10 +169,19 @@ const ReserveTable = () => {
                       name="numGuests"
                       id="numGuests"
                       value={numGuestsState}
-                      onChange={(e)=>setNumGuestsState(e.target.value)}
+                      onChange={handleGuestsChange}
                   />
               </div>
               </div>
+              {/* <div className="button">
+                  <input
+                    className="reserveButton"
+                    type="submit"
+                    value="Check Availability"
+                  />
+                    
+                  
+              </div> */}
               <ConfirmModal
                 name={nameState}
                 number={numberState}

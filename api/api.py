@@ -49,10 +49,9 @@ class Userinfo(db.Model):
   name = db.Column(db.String(45))
   phonenumber = db.Column(db.String(12))
   email = db.Column(db.String(45))
-  points = db.Column(db.Integer)
   billingaddressid = db.Column(db.Integer, db.ForeignKey('address.addressid', ondelete = "CASCADE"))
   mailingaddressid = db.Column(db.Integer, db.ForeignKey('address.addressid', ondelete = "CASCADE"))
-  paymentmethod = db.Column(db.String(6))
+  paymentid = db.Column(db.Integer, db.ForeignKey('paymentinfo.paymentid', ondelete = "CASCADE"))
   reservation = relationship("Reservations", backref = "Userinfo", passive_deletes = True, uselist=True)
 
 class Address(db.Model):
@@ -66,6 +65,7 @@ class Address(db.Model):
 
 class Reservations(db.Model):
   reservationnumber = db.Column(db.Integer, primary_key=True)
+  paymentid = db.Column(db.Integer, db.ForeignKey('paymentinfo.paymentid', ondelete = "CASCADE"))
   ismember = db.Column(db.Boolean)
   userinfo_useridnum = db.Column(db.Integer, db.ForeignKey('userinfo.useridnum', ondelete = "CASCADE"))
   reservationday = db.Column(db.Date)
@@ -77,6 +77,15 @@ class Reservations(db.Model):
   numfourtable = db.Column(db.Integer)
   numtwotable = db.Column(db.Integer)
   extracharge = db.Column(db.Integer)
+class PaymentInfo(db.Model):
+	paymentid = db.Column(db.Integer, primary_key=True)
+	paymentname = db.Column(db.String(45))
+	user = relationship("Userinfo", backref="PaymentInfo", foreign_keys="Userinfo.paymentid")
+	reservation = relationship("Reservation", backref="PaymentInfo2", foreign_keys="Reservation.paymentid")
+	cardnumber = db.Column(db.String(128))
+	expdate = db.Column(db.String(128))
+	seccode = db.Column(db.String(128))
+	lastfour = db.Column(db.Integer)
 
 def areAddressEqual(mailing, billing):
   if mailing == billing:
@@ -421,8 +430,6 @@ def editReservation_endpoint():
     NUM_FOUR_TABLE = 4
     NUM_TWO_TABLE = 4
     MAX_PARTY_SIZE = 80
-    table_sizes = [2, 4, 6, 8]
-
     reservationNum = request.form['reservationNum']
     reservationDay = request.form['reservationDay']
     reservationStartTime = request.form['reservationStartTime']
@@ -488,6 +495,11 @@ def reservations_endpoint():
   else:
     return jsonify(reservations)
 
+# @app.route('/api/avail', methods=['POST'])
+# def avail():
+# 	g = request.form['numGuests']
+# 	print(g)
+# 	return json.dumps("dope")
 # @app.route('/api/addRes', methods=['GET', 'POST'])
 # def addRes_endpoint():
 #   newRes = Reservations(ismember = 1, userinfo_useridnum = 5, reservationday = '2021-11-18', reservationstarttime = '15:00:00', reservationendtime = "15:30:00",
