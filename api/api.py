@@ -430,10 +430,12 @@ def reserve_endpoint():
       user = Userinfo.query.filter_by(usercredentials_username = username).first()
       userid = user.useridnum
       paymentinfoid = user.paymentinfo_paymentid
+      isMember = True
     else:
       userid = None
       payment = json.loads(request.form['payment'])
       paymentCheck = Paymentinfo.query.filter_by(cardnumber = sha_hash(payment['cardNumber']), securitycode = sha_hash(payment['cardSecurityCode'])).first()
+      isMember = False
       if paymentCheck:
         paymentinfoid = paymentCheck.paymentid
       else:
