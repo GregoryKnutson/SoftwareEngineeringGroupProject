@@ -8,6 +8,7 @@ import { checkAuth, getUserId } from "../../verifyLogin";
 import NavBar from "../NavBar/NavBar";
 import NavBarGuest from "../NavBar/NavBarGuest"
 import ConfirmModal from "./confirmModal"
+import jwt_decode from "jwt-decode";
 
 const ReserveTable = () => {
 
@@ -19,6 +20,7 @@ const ReserveTable = () => {
   const [endTimeState, setEndTimeState] = useState(36000)
   const [numGuestsState, setNumGuestsState] = useState(0)
   const [isLoggedIn, setLoggedIn] = useState(false)
+  const [cardState, setCardState] = useState("")
   const nothing = () => {}
 
   useEffect(() => {
@@ -49,41 +51,17 @@ const ReserveTable = () => {
             const search = location.search;
             const params = new URLSearchParams(search)
             if (params.get('guest') == 'true'){
-                const name = params.get('name')
-                const number = params.get('number')
-                const email = params.get('email')
-
-                if (name == undefined || number == undefined || email == undefined){
-                    alert("Please enter valid credentials")
-                    window.location.assign("/guest")
-                }
-
-                setNameState(name)
-                setNumberState(number)
-                setEmailState(email)
-
+                const token = params.get('token')
+                let decodedToken = jwt_decode(token);
+                setNameState(decodedToken['name'])
+                setNumberState(decodedToken['phonenumber'])
+                setEmailState(decodedToken['email'])
+                setCardState(decodedToken['payment'])
+                console.log(cardState)
             }
         }
   }, [])
-  const handleGuestsChange = (e) => {
-    setNumGuestsState(e.target.value)
-    // console.log(e.target.value)
-    // const sen_ = new FormData();
-    // sen_.append('numGuests', e.target.value)
-    // fetch(`${process.env.API_URL}/api/avail`,
-    // {
-    //     method: 'POST',
-    //     body: sen_
-    // }
-    // )
-    // .then((response) => {
-    //     console.log(response)
-    //     return response.json()
-    // })
-    // .then((res) => {
-    //     console.log('Received: ', res)
-    // })
-  }
+
     return(
       <div id="bootstrap-overides">
       <div className="reserveTable">
@@ -169,19 +147,10 @@ const ReserveTable = () => {
                       name="numGuests"
                       id="numGuests"
                       value={numGuestsState}
-                      onChange={handleGuestsChange}
+                      onChange={(e)=>setNumGuestsState(e.target.value)}
                   />
               </div>
               </div>
-              {/* <div className="button">
-                  <input
-                    className="reserveButton"
-                    type="submit"
-                    value="Check Availability"
-                  />
-                    
-                  
-              </div> */}
               <ConfirmModal
                 name={nameState}
                 number={numberState}
@@ -191,6 +160,7 @@ const ReserveTable = () => {
                 endTime={endTimeState}
                 numGuests={numGuestsState}
                 isLoggedIn={isLoggedIn}
+                payment={cardState}
               />
               </form>
           </div>
