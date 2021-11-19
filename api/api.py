@@ -51,8 +51,8 @@ class Userinfo(db.Model):
   email = db.Column(db.String(45))
   billingaddressid = db.Column(db.Integer, db.ForeignKey('address.addressid', ondelete = "CASCADE"))
   mailingaddressid = db.Column(db.Integer, db.ForeignKey('address.addressid', ondelete = "CASCADE"))
-  paymentid = db.Column(db.Integer, db.ForeignKey('paymentinfo.paymentid', ondelete = "CASCADE"))
   reservation = relationship("Reservations", backref = "Userinfo", passive_deletes = True, uselist=True)
+  paymentinfo_paymentid = db.Column(db.Integer, db.ForeignKey('paymentinfo.paymentid', ondelete = "CASCADE"))
 
 class Address(db.Model):
   addressid = db.Column(db.Integer, primary_key=True)
@@ -62,10 +62,8 @@ class Address(db.Model):
   zipcode = db.Column(db.Integer)
   billing = relationship("Userinfo", backref = "Address", foreign_keys="Userinfo.billingaddressid", passive_deletes = True, uselist=False)
   mailing = relationship("Userinfo", backref = "Address2", foreign_keys="Userinfo.mailingaddressid", passive_deletes = True, uselist=False)
-
 class Reservations(db.Model):
   reservationnumber = db.Column(db.Integer, primary_key=True)
-  paymentid = db.Column(db.Integer, db.ForeignKey('paymentinfo.paymentid', ondelete = "CASCADE"))
   ismember = db.Column(db.Boolean)
   userinfo_useridnum = db.Column(db.Integer, db.ForeignKey('userinfo.useridnum', ondelete = "CASCADE"))
   reservationday = db.Column(db.Date)
@@ -77,15 +75,17 @@ class Reservations(db.Model):
   numfourtable = db.Column(db.Integer)
   numtwotable = db.Column(db.Integer)
   extracharge = db.Column(db.Integer)
-class PaymentInfo(db.Model):
-	paymentid = db.Column(db.Integer, primary_key=True)
-	paymentname = db.Column(db.String(45))
-	user = relationship("Userinfo", backref="PaymentInfo", foreign_keys="Userinfo.paymentid")
-	reservation = relationship("Reservation", backref="PaymentInfo2", foreign_keys="Reservation.paymentid")
-	cardnumber = db.Column(db.String(128))
-	expdate = db.Column(db.String(128))
-	seccode = db.Column(db.String(128))
-	lastfour = db.Column(db.Integer)
+  paymentinfo_paymentid = db.Column(db.Integer, db.ForeignKey('paymentinfo.paymentid', ondelete = "CASCADE"))
+
+class Paymentinfo(db.Model):
+    paymentid = db.Column(db.Integer, primary_key=True)
+    paymentname = db.Column(db.String(45))
+    cardnumber = db.Column(db.String(128))
+    expdate = db.Column(db.String(128))
+    seccode = db.Column(db.String(128))
+    lastfour = db.Column(db.Integer)
+    user = relationship("Userinfo", backref = "PaymentInfo", passive_deletes = True, uselist=False)
+    reservation = relationship("Reservations", backref="PaymentInfo2", passive_deletes = True, uselist=False)
 
 def areAddressEqual(mailing, billing):
   if mailing == billing:
@@ -417,7 +417,7 @@ def reserve_endpoint():
                       reservationendtime = reservationEndTime, numpeople = numGuests, numtwotable = used["2"], numfourtable = used["4"], numsixtable = used["6"], numeighttable = used["8"], extracharge = extraCharge)
       db.session.merge(newReservation)
       db.session.commit()
-      return "Reserved successfully"
+      return json.dumps("Reserved successfully")
     else:
       print('No available seats')
       return make_response('No available seats', 400) 
@@ -495,11 +495,26 @@ def reservations_endpoint():
   else:
     return jsonify(reservations)
 
-# @app.route('/api/avail', methods=['POST'])
-# def avail():
-# 	g = request.form['numGuests']
-# 	print(g)
-# 	return json.dumps("dope")
+@app.route('/api/avail', methods=['POST'])
+def avail():
+  g = request.form['numGuests']
+  reservationDay = request.form['date']
+  reservationStartTime = request.form['sTime']
+  reservationEndTime = request.form['eTime']
+  NUM_EIGHT_TABLE = 4
+  NUM_SIX_TABLE = 4
+  NUM_FOUR_TABLE = 4
+  NUM_TWO_TABLE = 4
+  print(g, reservationDay, reservationStartTime, reservationEndTime)
+  currReservations = Reservations.query.filter((Reservations.reservationday == reservationDay) & (Reservations.reservationstarttime >= reservationStartTime) & (Reservations.reservationstarttime <= reservationEndTime) | 
+  (Reservations.reservationday == reservationDay) & (Reservations.reservationendtime >= reservationStartTime) & (Reservations.reservationendtime <= reservationEndTime)).all()
+  for res in currReservations:
+      NUM_EIGHT_TABLE = NUM_EIGHT_TABLE - res.numeighttable
+      NUM_SIX_TABLE = NUM_SIX_TABLE - res.numsixtable
+      NUM_FOUR_TABLE = NUM_FOUR_TABLE - res.numfourtable
+      NUM_TWO_TABLE = NUM_TWO_TABLE - res.numtwotable
+  avail = {"2": NUM_TWO_TABLE, "4": NUM_FOUR_TABLE, "6": NUM_SIX_TABLE, "8": NUM_EIGHT_TABLE}
+  return json.dumps(avail)
 # @app.route('/api/addRes', methods=['GET', 'POST'])
 # def addRes_endpoint():
 #   newRes = Reservations(ismember = 1, userinfo_useridnum = 5, reservationday = '2021-11-18', reservationstarttime = '15:00:00', reservationendtime = "15:30:00",

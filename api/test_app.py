@@ -3,6 +3,7 @@ import json
 from flask import Flask
 from unittest.mock import patch
 from flask.globals import request
+from werkzeug.wrappers import response
 from api import app, db
 from flask_jwt_extended import create_access_token
 
@@ -114,6 +115,22 @@ class FlaskTest(unittest.TestCase):
         "billingAddress": json.dumps(TEST_ADDRESS_BROKEN_4),
         "mailingAddress": json.dumps(TEST_ADDRESS)
     }
+    RESERVATION_TEST_1 = {
+        "name": "Gary Al",
+        "phonenumber": "1234567890",
+        "email": "yup@gmail.com",
+        "reservationDay":"12/24/2021",
+        "reservationStartTime": "10:00",
+        "reservationEndTime": "12:00"
+    }
+    RESERVATION_TEST_2 = {
+        "name": "Gary Al",
+        "phonenumber": "1234567890",
+        "email": "yup@gmail.com",
+        "reservationDay":"12/24/2021",
+        "reservationStartTime": "12:00",
+        "reservationEndTime": "10:00"
+    }
 
     def test1_home(self):
         tester= app.test_client(self)
@@ -203,7 +220,18 @@ class FlaskTest(unittest.TestCase):
         response= tester.get('http://localhost:5000/api/profile?username=')
         statuscode= response.status_code
         self.assertEqual(statuscode, 200)
-
+    def test14_checkavail(self):
+        tester = app.test_client(self)
+        response = tester.get('http:://localhost:8080/reserve',
+        data = FlaskTest.RESERVATION_TEST_1)
+        status_code = response.status_code
+        self.assertEqual(status_code, 200)
+    def test15_checkavail(self):
+        tester = app.test_client(self)
+        response = tester.get('http:://localhost:8080/reserve',
+        data = FlaskTest.RESERVATION_TEST_2)
+        status_code = response.status_code
+        self.assertEqual(status_code, 200)
 
 if __name__== "__main__":
     unittest.main()

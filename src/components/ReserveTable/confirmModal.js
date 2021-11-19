@@ -123,6 +123,7 @@ function alertObject(obj){
               .then(res => {
                   console.log("Success: ", res);
                   alert("Thank you! Submission Complete!")
+                  window.location.assign("/reservations")
               })
               .catch((error) => {
                 console.error(error);

@@ -5,16 +5,18 @@ import 'react-datepicker/dist/react-datepicker.css'
 import TimePicker from 'react-bootstrap-time-picker'
 import './ReserveTable.scss'
 import { checkAuth, getUserId } from "../../verifyLogin";
+import * as ReactBootstrap from "react-bootstrap";
 import NavBar from "../NavBar/NavBar";
 import NavBarGuest from "../NavBar/NavBarGuest"
 import ConfirmModal from "./confirmModal"
 
-const ReserveTable = () => {
+const ReserveTable = (obj) => {
 
   const [nameState, setNameState] = useState("")
   const [numberState, setNumberState] = useState("")
-  const [emailState, setEmailState] = useState("")
+  const [emailState, setEmailState] = useState({"2": 0, "4": 0, "6": 0, "8": 0})
   const [dateState, setDateState] = useState(null)
+  const [availState, setAvailState] = useState(null)
   const [startTimeState, setStartTimeState] = useState(36000)
   const [endTimeState, setEndTimeState] = useState(36000)
   const [numGuestsState, setNumGuestsState] = useState(0)
@@ -67,22 +69,49 @@ const ReserveTable = () => {
   }, [])
   const handleGuestsChange = (e) => {
     setNumGuestsState(e.target.value)
-    // console.log(e.target.value)
-    // const sen_ = new FormData();
-    // sen_.append('numGuests', e.target.value)
-    // fetch(`${process.env.API_URL}/api/avail`,
-    // {
-    //     method: 'POST',
-    //     body: sen_
-    // }
-    // )
-    // .then((response) => {
-    //     console.log(response)
-    //     return response.json()
-    // })
-    // .then((res) => {
-    //     console.log('Received: ', res)
-    // })
+    setAvailState(null)
+  }
+  const getTimeString = (seconds) => {
+    var date = new Date(0);
+    date.setSeconds(seconds)
+    var timeString = date.toISOString().substr(11, 8)
+    return timeString
+}
+  const checkAvail = (e) => {
+        e.preventDefault()
+        console.log(dateState)
+            let dayString = dateState.toISOString().substr(0, 10)
+            console.log(dayString)
+            let startTime = getTimeString(startTimeState)
+            let endTime = getTimeString(endTimeState)
+            const sen_ = new FormData();
+            sen_.append('numGuests', numGuestsState)
+            sen_.append('sTime', startTime)
+            sen_.append('eTime', endTime)
+            sen_.append('date', dayString)
+            fetch(`${process.env.API_URL}/api/avail`,
+            {
+                method: 'POST',
+                body: sen_
+            }
+            )
+            .then((response) => {
+                console.log(response)
+                return response.json()
+            })
+            .then((res) => {
+                setAvailState(res)
+                console.log('Received: ', res)
+            })
+  }
+  const printAvail = (avail, ind) =>{
+      console.log(ind)
+        return(
+            <tr key={ind}>
+                <td>{avail[0]}</td>
+                <td>{avail[1]} <span style={{fontStyle: "italic"}}> ({parseInt(avail[0])*avail[1]} total occupants)</span></td>
+            </tr>
+        )
   }
     return(
       <div id="bootstrap-overides">
@@ -173,15 +202,17 @@ const ReserveTable = () => {
                   />
               </div>
               </div>
-              {/* <div className="button">
-                  <input
-                    className="reserveButton"
-                    type="submit"
-                    value="Check Availability"
-                  />
-                    
-                  
-              </div> */}
+              { 
+              (numGuestsState > 0 && startTimeState < endTimeState && dateState !== null) &&
+                <div className="button">
+                    <input
+                        className="reserveButton"
+                        type="button"
+                        value="Check Availability"
+                        onClick={checkAvail}
+                    />
+                </div>
+              }
               <ConfirmModal
                 name={nameState}
                 number={numberState}
@@ -192,6 +223,27 @@ const ReserveTable = () => {
                 numGuests={numGuestsState}
                 isLoggedIn={isLoggedIn}
               />
+              {
+                  availState !== null &&
+                  <div>
+                      <h4 className="title">Availablity:</h4>
+                      <div className="avail-tables">
+                        <ReactBootstrap.Table striped bordered hover>
+                                <thead>
+                                    <tr>
+                                        <th>Table Size</th>
+                                        <th>Tables Available</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                {
+                                    Object.entries(availState).map(printAvail)
+                                }
+                                </tbody>
+                            </ReactBootstrap.Table>
+                        </div>
+                  </div>
+              }
               </form>
           </div>
 
