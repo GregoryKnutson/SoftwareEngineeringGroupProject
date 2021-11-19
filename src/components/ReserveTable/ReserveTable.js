@@ -9,8 +9,9 @@ import * as ReactBootstrap from "react-bootstrap";
 import NavBar from "../NavBar/NavBar";
 import NavBarGuest from "../NavBar/NavBarGuest"
 import ConfirmModal from "./confirmModal"
+import jwt_decode from "jwt-decode";
 
-const ReserveTable = (obj) => {
+const ReserveTable = () => {
 
   const [nameState, setNameState] = useState("")
   const [numberState, setNumberState] = useState("")
@@ -21,6 +22,7 @@ const ReserveTable = (obj) => {
   const [endTimeState, setEndTimeState] = useState(36000)
   const [numGuestsState, setNumGuestsState] = useState(0)
   const [isLoggedIn, setLoggedIn] = useState(false)
+  const [cardState, setCardState] = useState("")
   const nothing = () => {}
 
   useEffect(() => {
@@ -51,19 +53,13 @@ const ReserveTable = (obj) => {
             const search = location.search;
             const params = new URLSearchParams(search)
             if (params.get('guest') == 'true'){
-                const name = params.get('name')
-                const number = params.get('number')
-                const email = params.get('email')
-
-                if (name == undefined || number == undefined || email == undefined){
-                    alert("Please enter valid credentials")
-                    window.location.assign("/guest")
-                }
-
-                setNameState(name)
-                setNumberState(number)
-                setEmailState(email)
-
+                const token = params.get('token')
+                let decodedToken = jwt_decode(token);
+                setNameState(decodedToken['name'])
+                setNumberState(decodedToken['phonenumber'])
+                setEmailState(decodedToken['email'])
+                setCardState(decodedToken['payment'])
+                console.log(cardState)
             }
         }
   }, [])
@@ -222,6 +218,7 @@ const ReserveTable = (obj) => {
                 endTime={endTimeState}
                 numGuests={numGuestsState}
                 isLoggedIn={isLoggedIn}
+                payment={cardState}
               />
               {
                   availState !== null &&

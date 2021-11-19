@@ -1,25 +1,106 @@
 import React, { useEffect, useState } from "react";
 import { checkAuth, getUserId } from "../../verifyLogin";
 import 'bootstrap/dist/css/bootstrap.min.css';
-import EditIcon from '@mui/icons-material/Edit';
-import IconButton from "@material-ui/core/IconButton";
 import Dialog from "@material-ui/core/Dialog";
 import DialogActions from "@material-ui/core/DialogActions";
-import DialogContent from "@material-ui/core/DialogContent";
 import DialogTitle from "@material-ui/core/DialogTitle";
-import ButtonUI from "@material-ui/core/Button";
-import DatePicker from "react-datepicker";
 import 'react-datepicker/dist/react-datepicker.css'
-import TimePicker from 'react-bootstrap-time-picker'
-import Payment from "./Payment"
 import { Button, Form, Alert, Row, Col } from "react-bootstrap";
-import useForm from "./useForm";
 import Cards from "react-credit-cards";
+import "./PaymentModal.scss"
+import "react-credit-cards/es/styles-compiled.css";
 
-const PaymentModal = ({obj}) => {
+import valid from "card-validator";
+
+const PaymentModal = ({handleChange, handleFocus, values, cardAdded, setCardAdded}) => {
 
     const [open, setOpen] = React.useState(false);
-    const { handleChange, handleFocus, handleSubmit, values, errors } = useForm();
+    const [cardErrors, setCardErrors] = useState({        
+      show: false,
+      variant: "danger",
+      message: "",
+      cname: false,
+      cnumber: false,
+      cexp: false,
+      ccvv: false
+  })
+
+  function validateInfo(values) {
+    let cardErrors = {};
+    let creditCard = valid.number(values.cardNumber);
+  
+    creditCard.expirationDate = valid.expirationDate(values.cardExpiration);
+    creditCard.cvv = valid.cvv(values.cardSecurityCode);
+    creditCard.cardholderName = valid.cardholderName(values.cardName);
+  
+    cardErrors.show = true;
+    cardErrors.variant = "danger";
+    cardErrors.message = "An unknown error occured. Please try again later"
+    cardErrors.cname = false;
+    cardErrors.cnumber = false;
+    cardErrors.cexp = false;
+    cardErrors.ccvv = false;
+  
+    //Card CVV expiration
+    if (values.cardSecurityCode === null || !values.cardSecurityCode.trim()) {
+      cardErrors.message = "Credit card CVC is not complete";
+    } else if (creditCard.cvv.isValid) {
+      cardErrors.ccvv = true;
+    } else {
+      cardErrors.message = "Credit card CVC is invalid";
+    }
+  
+    //Card Expiration Verification
+    if (values.cardExpiration === null || !values.cardExpiration.trim()) {
+      cardErrors.message = "Credit card expiration date is not complete";
+    } else if (creditCard.expirationDate.isValid) {
+      cardErrors.cexp = true;
+    } else {
+      cardErrors.message = "Credit card expiration date is invalid";
+    }
+  
+  
+    //Card Number Verification
+    if (values.cardNumber === null || !values.cardNumber.trim()) {
+      cardErrors.message = "Credit card number is not complete";
+    } else if (creditCard.isValid) {
+      cardErrors.cnumber = true;
+    } else {
+      cardErrors.message = "Credit card number is invalid";
+    }
+  
+    //Cardholder Name Verification
+    if (values.cardName === null || !values.cardName.trim()) {
+      cardErrors.message = "Cardholder name is not complete";
+    } else if (creditCard.cardholderName.isValid) {
+      cardErrors.cname = true;
+    } else {
+      cardErrors.message = "Cardholder name is invalid";
+    }
+  
+    if (
+      cardErrors.cname &&
+      cardErrors.cnumber &&
+      cardErrors.cexp &&
+      cardErrors.ccvv
+    ) {
+      cardErrors.variant = "success";
+      cardErrors.message = "Credit Card is valid";
+    }
+
+    setCardErrors(cardErrors)
+    return cardErrors.variant
+  }
+
+
+    const handleCardValidate = e => {
+      e.preventDefault()
+      var variant = validateInfo(values)
+      if (variant == "success"){
+        setCardAdded(true)
+        handleClose()
+      }
+  };
 
     const handleClickOpen = (e) => {
       e.preventDefault()
@@ -33,10 +114,22 @@ const PaymentModal = ({obj}) => {
     
     return(
         <div>
-        <IconButton onClick={handleClickOpen}>
-          <button>pay</button>
-        </IconButton>
-        <Dialog className
+          <div className = "cardContainer">
+          <div className="button">
+            <input
+              className="cardButton"
+              type="button"
+              value="Add Card"
+              onClick={handleClickOpen}
+            />
+          </div>
+          {
+            !cardAdded ?
+            <p className= "cardMessage">No Card Added</p>
+            : <p className= "cardMessage">Card Added!</p>
+          }
+          </div>
+        <Dialog
           open={open}
           onClose={handleClose}
           aria-labelledby="form-dialog-title"
@@ -51,7 +144,7 @@ const PaymentModal = ({obj}) => {
             number={values.cardNumber}
           />
           </div>
-          <Form onSubmit={handleSubmit}>
+          <Form>
             <Form.Group>
               <Form.Control
                 type="text"
@@ -62,7 +155,7 @@ const PaymentModal = ({obj}) => {
                 value={values.cardName}
                 onChange={handleChange}
                 onFocus={handleFocus}
-                isValid={errors.cname}
+                isValid={cardErrors.cname}
               />
             </Form.Group>
             <Form.Group>
@@ -75,7 +168,7 @@ const PaymentModal = ({obj}) => {
                 value={values.cardNumber}
                 onChange={handleChange}
                 onFocus={handleFocus}
-                isValid={errors.cnumber}
+                isValid={cardErrors.cnumber}
               />
             </Form.Group>
             <Row>
@@ -90,7 +183,7 @@ const PaymentModal = ({obj}) => {
                     value={values.cardExpiration}
                     onChange={handleChange}
                     onFocus={handleFocus}
-                    isValid={errors.cexp}
+                    isValid={cardErrors.cexp}
                   />
                 </Form.Group>
               </Col>
@@ -105,12 +198,20 @@ const PaymentModal = ({obj}) => {
                     value={values.cardSecurityCode}
                     onChange={handleChange}
                     onFocus={handleFocus}
-                    isValid={errors.ccvv}
+                    isValid={cardErrors.ccvv}
                   />
                 </Form.Group>
               </Col>
             </Row>
           </Form>
+          <Alert
+            id="alertMessage"
+            data-testid="alertMessage"
+            variant={cardErrors.variant}
+            show={cardErrors.show}
+          >
+            {cardErrors.message}
+          </Alert>{" "}
           <DialogActions>
             <Button onClick={handleClose} color="primary">
               Cancel
@@ -119,7 +220,8 @@ const PaymentModal = ({obj}) => {
               size={"block"}
               data-testid="validateButton"
               id="validateButton"
-              type="submit"
+              type="button"
+              onClick={handleCardValidate}
             >
               Validate
             </Button>

@@ -13,6 +13,7 @@ from functools import wraps
 from werkzeug.security import generate_password_hash, check_password_hash
 import requests
 import holidays
+import hashlib
 
 app = Flask(__name__)
 CORS(app)
@@ -38,6 +39,9 @@ def token_required(func):
 
   return decorated
 
+def sha_hash(str_to_hash):
+  return hashlib.sha256(str_to_hash.encode('utf-8')).hexdigest()
+
 class Usercredentials(db.Model):
   username = db.Column(db.String(20), primary_key=True)
   password = db.Column(db.String(128))
@@ -62,6 +66,7 @@ class Address(db.Model):
   zipcode = db.Column(db.Integer)
   billing = relationship("Userinfo", backref = "Address", foreign_keys="Userinfo.billingaddressid", passive_deletes = True, uselist=False)
   mailing = relationship("Userinfo", backref = "Address2", foreign_keys="Userinfo.mailingaddressid", passive_deletes = True, uselist=False)
+
 class Reservations(db.Model):
   reservationnumber = db.Column(db.Integer, primary_key=True)
   ismember = db.Column(db.Boolean)
@@ -78,14 +83,14 @@ class Reservations(db.Model):
   paymentinfo_paymentid = db.Column(db.Integer, db.ForeignKey('paymentinfo.paymentid', ondelete = "CASCADE"))
 
 class Paymentinfo(db.Model):
-    paymentid = db.Column(db.Integer, primary_key=True)
-    paymentname = db.Column(db.String(45))
-    cardnumber = db.Column(db.String(128))
-    expdate = db.Column(db.String(128))
-    seccode = db.Column(db.String(128))
-    lastfour = db.Column(db.Integer)
-    user = relationship("Userinfo", backref = "PaymentInfo", passive_deletes = True, uselist=False)
-    reservation = relationship("Reservations", backref="PaymentInfo2", passive_deletes = True, uselist=False)
+	paymentid = db.Column(db.Integer, primary_key=True)
+	paymentname = db.Column(db.String(45))
+	cardnumber = db.Column(db.String(128))
+	expirationdate = db.Column(db.String(128))
+	securitycode = db.Column(db.String(128))
+	lastfourdigits = db.Column(db.Integer)
+	user = relationship("Userinfo", backref = "PaymentInfo", passive_deletes = True, uselist=False)
+	reservation = relationship("Reservations", backref="PaymentInfo2", passive_deletes = True, uselist=False)
 
 def areAddressEqual(mailing, billing):
   if mailing == billing:
@@ -143,6 +148,21 @@ def login_endpoint():
 
     return make_response('Unable to verify', 403, {'WWW-Authenticate': 'Basic realm: "Authentication failed!"'})
 
+@app.route('/api/guest', methods=['POST'])
+def guest_endpoint():
+  if request.method == 'POST':
+
+    token = jwt.encode({
+      'name': request.form['name'],
+      'phonenumber': request.form['phonenumber'],
+      'email': request.form['email'],
+      'payment': request.form['payment'],
+      'expiration': str(datetime.utcnow() + timedelta(minutes=10)),
+
+      }, app.config['SECRET_KEY'])
+
+    return {'token': token}
+
 
 @app.route('/api/profile', methods=['GET', 'POST'])
 def profile_endpoint():
@@ -161,6 +181,9 @@ def profile_endpoint():
 
     billingAddress = json.loads(request.form['billingAddress'])
     mailingAddress = json.loads(request.form['mailingAddress'])
+    payment = json.loads(request.form['payment'])
+    lastFourDigits = int(str(payment['cardNumber'])[len(str(payment['cardNumber'])) - 4 :])
+    print(lastFourDigits)
     if len(billingAddress['address']) > 50 or len(mailingAddress['address']) > 50:
       return jsonify({'Alert!': 'Invalid Address!'}), 400
     if len(billingAddress['city']) > 20 or len(mailingAddress['city']) > 20:
@@ -181,6 +204,9 @@ def profile_endpoint():
     user = Userinfo.query.filter_by(usercredentials_username = username).first()
     billingAddressID = None
     mailingAddressID = None
+
+    userPayment = Paymentinfo.query.filter_by(cardnumber = sha_hash(payment['cardNumber']), securitycode = sha_hash(payment['cardSecurityCode'])).first()
+    cardID = None
 
     if isAddressEqual: #checks if addresses are equal
       userAddress = Address.query.filter_by(city = billingAddress['city'], state = billingAddress['state'], address = billingAddress['address'], zipcode = billingAddress['zip']).first() #looks for address in DB
@@ -217,11 +243,21 @@ def profile_endpoint():
         mailingAddressID = newMailingAddress.addressid
         print(mailingAddressID)
 
+    if(userPayment):
+      cardID= userPayment.paymentid
+    else:
+      newPaymentInfo = Paymentinfo(paymentname = payment['cardName'], cardnumber = sha_hash(payment['cardNumber']), expirationdate = sha_hash(payment['cardExpiration']), securitycode = sha_hash(payment['cardSecurityCode']), lastfourdigits = lastFourDigits)
+      db.session.merge(newPaymentInfo)
+      db.session.commit()
+      userPayment = Paymentinfo.query.filter_by(cardnumber = sha_hash(payment['cardNumber']), securitycode = sha_hash(payment['cardSecurityCode'])).first()
+      cardID= userPayment.paymentid
+
     #Updates current user
     if user:
       user.name = name
       user.phonenumber = phonenumber
       user.email = email
+      user.paymentinfo_paymentid = cardID
 
       oldBillingAddressID = user.billingaddressid
       oldMailingAddressID = user.mailingaddressid
@@ -249,7 +285,7 @@ def profile_endpoint():
 
       print("updating")
     else: #Creates new user 
-      newProfile = Userinfo(usercredentials_username = username, name = name, phonenumber = phonenumber, email = email, billingaddressid = billingAddressID, mailingaddressid = mailingAddressID)
+      newProfile = Userinfo(usercredentials_username = username, name = name, phonenumber = phonenumber, email = email, billingaddressid = billingAddressID, mailingaddressid = mailingAddressID, paymentinfo_paymentid = cardID)
       db.session.merge(newProfile)
       db.session.commit()
 
@@ -282,7 +318,8 @@ def profile_endpoint():
                 "phonenumber": user.phonenumber,
                 "email": user.email,
                 "billingAddress": bAddress,
-                "mailingAddress": mAddress
+                "mailingAddress": mAddress,
+                "validPayment": True
             }
 
         return json.dumps(dataToReturn)
@@ -392,8 +429,23 @@ def reserve_endpoint():
       username = request.form['username']
       user = Userinfo.query.filter_by(usercredentials_username = username).first()
       userid = user.useridnum
+      paymentinfoid = user.paymentinfo_paymentid
+      isMember = True
     else:
       userid = None
+      payment = json.loads(request.form['payment'])
+      paymentCheck = Paymentinfo.query.filter_by(cardnumber = sha_hash(payment['cardNumber']), securitycode = sha_hash(payment['cardSecurityCode'])).first()
+      isMember = False
+      if paymentCheck:
+        paymentinfoid = paymentCheck.paymentid
+      else:
+        lastFourDigits = int(str(payment['cardNumber'])[len(str(payment['cardNumber'])) - 4 :])
+        newPaymentInfo = Paymentinfo(paymentname = payment['cardName'], cardnumber = sha_hash(payment['cardNumber']), expirationdate = sha_hash(payment['cardExpiration']), securitycode = sha_hash(payment['cardSecurityCode']), lastfourdigits = lastFourDigits)
+        db.session.merge(newPaymentInfo)
+        db.session.commit()
+        userPayment = Paymentinfo.query.filter_by(cardnumber = sha_hash(payment['cardNumber']), securitycode = sha_hash(payment['cardSecurityCode'])).first()
+        paymentinfoid= userPayment.paymentid
+
     currReservations = Reservations.query.filter((Reservations.reservationday == reservationDay) & (Reservations.reservationstarttime >= reservationStartTime) & (Reservations.reservationstarttime <= reservationEndTime) | 
     (Reservations.reservationday == reservationDay) & (Reservations.reservationendtime >= reservationStartTime) & (Reservations.reservationendtime <= reservationEndTime)).all()
     for res in currReservations:
@@ -414,7 +466,7 @@ def reserve_endpoint():
         if used[occup]:
           print("Used %d table(s) of size %s" %(used[occup], occup))
       newReservation = Reservations(ismember = bool(isMember), userinfo_useridnum = userid, reservationday = reservationDay, reservationstarttime = reservationStartTime,
-                      reservationendtime = reservationEndTime, numpeople = numGuests, numtwotable = used["2"], numfourtable = used["4"], numsixtable = used["6"], numeighttable = used["8"], extracharge = extraCharge)
+                      reservationendtime = reservationEndTime, numpeople = numGuests, numtwotable = used["2"], numfourtable = used["4"], numsixtable = used["6"], numeighttable = used["8"], extracharge = extraCharge, paymentinfo_paymentid = paymentinfoid)
       db.session.merge(newReservation)
       db.session.commit()
       return json.dumps("Reserved successfully")
@@ -430,6 +482,7 @@ def editReservation_endpoint():
     NUM_FOUR_TABLE = 4
     NUM_TWO_TABLE = 4
     MAX_PARTY_SIZE = 80
+
     reservationNum = request.form['reservationNum']
     reservationDay = request.form['reservationDay']
     reservationStartTime = request.form['reservationStartTime']
@@ -494,31 +547,23 @@ def reservations_endpoint():
     return json.dumps(data)
   else:
     return jsonify(reservations)
-
 @app.route('/api/avail', methods=['POST'])
 def avail():
-  g = request.form['numGuests']
-  reservationDay = request.form['date']
-  reservationStartTime = request.form['sTime']
-  reservationEndTime = request.form['eTime']
-  NUM_EIGHT_TABLE = 4
-  NUM_SIX_TABLE = 4
-  NUM_FOUR_TABLE = 4
-  NUM_TWO_TABLE = 4
-  print(g, reservationDay, reservationStartTime, reservationEndTime)
-  currReservations = Reservations.query.filter((Reservations.reservationday == reservationDay) & (Reservations.reservationstarttime >= reservationStartTime) & (Reservations.reservationstarttime <= reservationEndTime) | 
-  (Reservations.reservationday == reservationDay) & (Reservations.reservationendtime >= reservationStartTime) & (Reservations.reservationendtime <= reservationEndTime)).all()
-  for res in currReservations:
-      NUM_EIGHT_TABLE = NUM_EIGHT_TABLE - res.numeighttable
-      NUM_SIX_TABLE = NUM_SIX_TABLE - res.numsixtable
-      NUM_FOUR_TABLE = NUM_FOUR_TABLE - res.numfourtable
-      NUM_TWO_TABLE = NUM_TWO_TABLE - res.numtwotable
-  avail = {"2": NUM_TWO_TABLE, "4": NUM_FOUR_TABLE, "6": NUM_SIX_TABLE, "8": NUM_EIGHT_TABLE}
-  return json.dumps(avail)
-# @app.route('/api/addRes', methods=['GET', 'POST'])
-# def addRes_endpoint():
-#   newRes = Reservations(ismember = 1, userinfo_useridnum = 5, reservationday = '2021-11-18', reservationstarttime = '15:00:00', reservationendtime = "15:30:00",
-#   numpeople = 5, numeighttable = 0, numsixtable = 0, numfourtable = 1, numtwotable = 1)
-#   db.session.merge(newRes)
-#   db.session.commit()
-#   return "success"
+    g = request.form['numGuests']
+    reservationDay = request.form['date']
+    reservationStartTime = request.form['sTime']
+    reservationEndTime = request.form['eTime']
+    NUM_EIGHT_TABLE = 4
+    NUM_SIX_TABLE = 4
+    NUM_FOUR_TABLE = 4
+    NUM_TWO_TABLE = 4
+    print(g, reservationDay, reservationStartTime, reservationEndTime)
+    currReservations = Reservations.query.filter((Reservations.reservationday == reservationDay) & (Reservations.reservationstarttime >= reservationStartTime) & (Reservations.reservationstarttime <= reservationEndTime) | 
+    (Reservations.reservationday == reservationDay) & (Reservations.reservationendtime >= reservationStartTime) & (Reservations.reservationendtime <= reservationEndTime)).all()
+    for res in currReservations:
+        NUM_EIGHT_TABLE = NUM_EIGHT_TABLE - res.numeighttable
+        NUM_SIX_TABLE = NUM_SIX_TABLE - res.numsixtable
+        NUM_FOUR_TABLE = NUM_FOUR_TABLE - res.numfourtable
+        NUM_TWO_TABLE = NUM_TWO_TABLE - res.numtwotable
+    avail = {"2": NUM_TWO_TABLE, "4": NUM_FOUR_TABLE, "6": NUM_SIX_TABLE, "8": NUM_EIGHT_TABLE}
+    return json.dumps(avail)

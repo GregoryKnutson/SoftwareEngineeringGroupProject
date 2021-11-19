@@ -10,6 +10,7 @@ import Button from "@material-ui/core/Button";
 import DatePicker from "react-datepicker";
 import 'react-datepicker/dist/react-datepicker.css'
 import TimePicker from 'react-bootstrap-time-picker'
+import jwt_decode from "jwt-decode";
 
 const ConfirmModal = (obj) => {
 
@@ -105,10 +106,14 @@ function alertObject(obj){
               if(obj.isLoggedIn){
                   formData.append('username', getUserId())
               }
+              else{
+                formData.append('payment', obj.payment)
+              }
         
               fetch(`${process.env.API_URL}/api/reserve`,
               {
                 method: 'POST',
+                mode: "no-cors",
                 body: formData,
               }
             )

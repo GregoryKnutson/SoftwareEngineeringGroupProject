@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import { Redirect, Link } from 'react-router-dom';
 import './GuestInfo.scss'
 import NavBarGuest from '../NavBar/NavBarGuest'
+import PaymentModal from "../Payment/PaymentModal";
+import useForm from "../Payment/useForm"
 
 const GuestInfo = () => {
 
@@ -9,6 +11,8 @@ const GuestInfo = () => {
     const [numberState, setNumberState] = useState("")
     const [emailState, setEmailState] = useState("")
     const [errorsState, setErrorsState] = useState({});
+    const { handleChange, handleFocus, values } = useForm();
+    const [cardAdded, setCardAdded] = useState(false)
   
     const SaveInfo = (e) => {
         e.preventDefault()
@@ -32,6 +36,7 @@ const GuestInfo = () => {
             if (numberState.length == '') errors.email = "Email can not be blank"
             if (emailState == '') errors.email = "Email can not be blank."
             if (emailState.length > 45) errors.email = "Email is too long."
+            if (cardAdded == false) errors.card = "Please add a valid card"
       
             if (Object.keys(errors) !== 0){
               setErrorsState(errors)
@@ -41,10 +46,30 @@ const GuestInfo = () => {
           const errors = validate()
     
           if (Object.keys(errors).length === 0){
-            window.location.assign(`/reserve?guest=true&name=${nameState}&number=${numberState}&email=${emailState}`)
-          }
-          else {
-              alertObject(errors)
+            const formData = new FormData();
+            formData.append("name", nameState);
+            formData.append("phonenumber", numberState);
+            formData.append("email", emailState);
+            formData.append("payment", JSON.stringify(values))
+      
+            fetch(
+              `${process.env.API_URL}/api/guest`,
+              {
+                method: "POST",
+                body: formData,
+              }
+            )
+              .then((response) => response.json())
+              .then((result) => {
+                console.log("Success: ", result);
+                alert("Thank you! Submission Complete!");
+                window.location.assign(`/reserve?guest=true&token=${result.token}`);
+              })
+              .catch((error) => {
+                console.error("Error: ", error);
+              });
+          } else {
+            alertObject(errors);
           }
 
 
@@ -91,6 +116,9 @@ const GuestInfo = () => {
                       onChange={(e)=>setEmailState(e.target.value)}
                   />
               </div>
+              <div>
+                <PaymentModal handleChange={handleChange} handleFocus={handleFocus} values={values} cardAdded={cardAdded} setCardAdded={setCardAdded}></PaymentModal>
+            </div>
               </div>
               <div className="button">
                   <input 

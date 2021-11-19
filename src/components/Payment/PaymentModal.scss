@@ -1,13 +1,5 @@
-.container {
-    margin-top: 10%;
-    width: 100%;
-    display: flex;
-    justify-content: center;
-  }
-  
+
   .formDiv {
-    width: 400px;
-    padding: 30px;
     border-radius: 10px;
     -webkit-box-shadow: -1px 8px 15px 0px rgba(0, 0, 0, 0.44);
     -moz-box-shadow: -1px 8px 15px 0px rgba(0, 0, 0, 0.44);
@@ -16,13 +8,16 @@
   
   .alert {
     text-align: center;
-    margin-top: 20px;
   }
   
   .creditCard{
       margin-bottom: 10%;
   }
 
-  .modal{
-    width:400px;
+  .cardContainer{
+    display:flex;
+  }
+
+  .cardMessage{
+    margin-top: 15px;
   }

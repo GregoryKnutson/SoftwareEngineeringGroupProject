@@ -4,7 +4,8 @@ import { checkAuth, setAuth, getUserId } from "../../verifyLogin";
 import Address from "./AddressForm";
 import "./UserInfo.scss";
 import NavBar from "../NavBar/NavBar";
-
+import PaymentModal from "../Payment/PaymentModal";
+import useForm from "../Payment/useForm"
 const UserInfo = () => {
 
   let emptyAddress = {
@@ -22,6 +23,9 @@ const UserInfo = () => {
 
   const [billingAddress, setBillingAddress] = useState(emptyAddress)
   const [mailingAddress, setMailingAddress] = useState(emptyAddress)
+
+  const { handleChange, handleFocus, values } = useForm();
+  const [cardAdded, setCardAdded] = useState(false)
 
   const changeBillingAddress = (e) => {
     setBillingAddress({...billingAddress, [e.target.name]:e.target.value})
@@ -66,6 +70,9 @@ const UserInfo = () => {
           setChecked(false)
           setMailingAddress(result.mailingAddress)
         }
+        if(result.validPayment == true){
+          setCardAdded(true)
+        }
 
       })
       .catch((error) => {
@@ -83,8 +90,6 @@ const UserInfo = () => {
         }
       }
     }
-    console.log(mailingAddress)
-    console.log(billingAddress)
 
     const validate = () => {
       let errors = {};
@@ -109,7 +114,7 @@ const UserInfo = () => {
       if (mailingAddress.state.length != 2) errors.city = "Please select a state."
       if (billingAddress.zip.length < 5 || billingAddress.zip.length > 9) errors.zip = "Please Enter Valid Zip Code for Billing Address."
       if (mailingAddress.zip.length < 5 || mailingAddress.zip.length > 9) errors.zip = "Please Enter Valid Zip Code for Mailing Address."
-      
+      if (cardAdded == false) errors.card = "Please add a valid card"
 
       if (Object.keys(errors) !== 0) {
         setErrorsState(errors);
@@ -126,6 +131,7 @@ const UserInfo = () => {
       formData.append("email", emailState);
       formData.append("billingAddress", JSON.stringify(billingAddress))
       formData.append("mailingAddress", JSON.stringify(mailingAddress))
+      formData.append("payment", JSON.stringify(values))
 
       fetch(
         `${process.env.API_URL}/api/profile?token=${localStorage.getItem(
@@ -141,7 +147,7 @@ const UserInfo = () => {
         .then((result) => {
           console.log("Success: ", result);
           alert("Thank you! Submission Complete!");
-          window.location.assign("/reserve");
+          //window.location.assign("/reserve");
         })
         .catch((error) => {
           console.error("Error: ", error);
@@ -239,6 +245,9 @@ const UserInfo = () => {
             {showMailingAddress()}
             </div>
           </div>
+          <div>
+            <PaymentModal handleChange={handleChange} handleFocus={handleFocus} values={values} cardAdded={cardAdded} setCardAdded={setCardAdded}></PaymentModal>
+            </div>
           <div className="button">
             <input
               className="reserveButton"
