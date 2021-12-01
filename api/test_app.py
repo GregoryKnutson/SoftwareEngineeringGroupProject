@@ -10,7 +10,7 @@ from flask_jwt_extended import create_access_token
 
 class FlaskTest(unittest.TestCase):
 
-    CURR_USERNAME = "Test3"
+    CURR_USERNAME = "Test11"
 
     REGISTER_AND_LOGIN_OBJ={
         "username":CURR_USERNAME,
@@ -57,14 +57,18 @@ class FlaskTest(unittest.TestCase):
         "phonenumber": "1231231234",
         "email": "testemail@gmail.com",
         "billingAddress": json.dumps(TEST_ADDRESS),
-        "mailingAddress": json.dumps(TEST_ADDRESS)
+        "mailingAddress": json.dumps(TEST_ADDRESS),
+        "cardUpdated": "false",
+        "lastFourDigits": "1111"
     }
     PROFILE_OBJ_2={
         "name":"Bob Smith",
         "phonenumber": "1231231234",
         "email": "testemail@gmail.com",
         "billingAddress": json.dumps(TEST_ADDRESS),
-        "mailingAddress": json.dumps(TEST_ADDRESS_2)
+        "mailingAddress": json.dumps(TEST_ADDRESS_2),
+        "cardUpdated": "false",
+        "lastFourDigits": "1111"
     }
     PROFILE_OBJ_BROKEN_1={
         "name":"Test Test Test Test Test Test Test Test Test Test Test Test Test Test",
@@ -116,122 +120,134 @@ class FlaskTest(unittest.TestCase):
         "mailingAddress": json.dumps(TEST_ADDRESS)
     }
     RESERVATION_TEST_1 = {
+        "isMember": "true",
+        "username": CURR_USERNAME,
         "name": "Gary Al",
         "phonenumber": "1234567890",
         "email": "yup@gmail.com",
-        "reservationDay":"12/24/2021",
-        "reservationStartTime": "10:00",
-        "reservationEndTime": "12:00"
+        "reservationDay":"2023-12-03",
+        "reservationStartTime": "10:00:00",
+        "reservationEndTime": "12:00:00",
+        "numGuests": "2",
+        "extraCharge": "20",
+        "cardUpdated": "false",
+        "lastFourDigits": "1111"
     }
-    RESERVATION_TEST_2 = {
+    RESERVATION_TEST_BROKEN2 = {
+        "isMember": "true",
+        "username": CURR_USERNAME,
         "name": "Gary Al",
         "phonenumber": "1234567890",
         "email": "yup@gmail.com",
-        "reservationDay":"12/24/2021",
-        "reservationStartTime": "12:00",
-        "reservationEndTime": "10:00"
+        "reservationDay":"2023-12-03",
+        "reservationStartTime": "12:00:00",
+        "reservationEndTime": "10:00:00",
+        "numGuests": "2",
+        "extraCharge": "20"
     }
 
-    def test1_home(self):
-        tester= app.test_client(self)
-        response= tester.get('http://localhost:5000/')
-        statuscode= response.status_code
-        self.assertEqual(statuscode, 200)
+    # def test1_home(self):
+    #     tester= app.test_client(self)
+    #     response= tester.get('http://localhost:5000/')
+    #     statuscode= response.status_code
+    #     self.assertEqual(statuscode, 200)
 
-    def test2_register(self):
-        tester= app.test_client(self)
-        response= tester.post('http://localhost:8080/api/register',
-        data=FlaskTest.REGISTER_AND_LOGIN_OBJ)
-        statuscode= response.status_code
-        self.assertEqual(statuscode, 200)
+    # def test2_register(self):
+    #     tester= app.test_client(self)
+    #     response= tester.post('http://localhost:5000/api/register',
+    #     data=FlaskTest.REGISTER_AND_LOGIN_OBJ)
+    #     statuscode= response.status_code
+    #     self.assertEqual(statuscode, 200)
 
-    def test3_login(self):
-        tester= app.test_client(self)
-        response= tester.post('http://localhost:8080/api/login',
-        data=FlaskTest.REGISTER_AND_LOGIN_OBJ)
-        statuscode= response.status_code
-        self.assertEqual(statuscode, 200)
+    # def test3_login(self):
+    #     tester= app.test_client(self)
+    #     response= tester.post('http://localhost:5000/api/login',
+    #     data=FlaskTest.REGISTER_AND_LOGIN_OBJ)
+    #     statuscode= response.status_code
+    #     self.assertEqual(statuscode, 200)
 
     def test4_profile_equal_address(self):
         tester= app.test_client(self)
-        response= tester.post('http://localhost:8080/api/profile?username=' + FlaskTest.CURR_USERNAME,
+        response= tester.post('http://localhost:5000/api/profile?username=' + FlaskTest.CURR_USERNAME,
         data=FlaskTest.PROFILE_OBJ)
         statuscode= response.status_code
         self.assertEqual(statuscode, 200)
 
     def test5_profile_unequal_address(self):
         tester= app.test_client(self)
-        response= tester.post('http://localhost:8080/api/profile?username=' + FlaskTest.CURR_USERNAME,
+        response= tester.post('http://localhost:5000/api/profile?username=' + FlaskTest.CURR_USERNAME,
         data=FlaskTest.PROFILE_OBJ_2)
         statuscode= response.status_code
         self.assertEqual(statuscode, 200)
 
-    def test6_profile_broken1(self):
-        tester= app.test_client(self)
-        response= tester.post('http://localhost:8080/api/profile',
-        data=FlaskTest.PROFILE_OBJ_BROKEN_1)
-        statuscode= response.status_code
-        self.assertEqual(statuscode, 400)
+    # def test6_profile_broken1(self):
+    #     tester= app.test_client(self)
+    #     response= tester.post('http://localhost:5000/api/profile',
+    #     data=FlaskTest.PROFILE_OBJ_BROKEN_1)
+    #     statuscode= response.status_code
+    #     self.assertEqual(statuscode, 400)
 
-    def test7_profile_broken2(self):
-        tester= app.test_client(self)
-        response= tester.post('http://localhost:8080/api/profile',
-        data=FlaskTest.PROFILE_OBJ_BROKEN_2)
-        statuscode= response.status_code
-        self.assertEqual(statuscode, 400)
+    # def test7_profile_broken2(self):
+    #     tester= app.test_client(self)
+    #     response= tester.post('http://localhost:5000/api/profile',
+    #     data=FlaskTest.PROFILE_OBJ_BROKEN_2)
+    #     statuscode= response.status_code
+    #     self.assertEqual(statuscode, 400)
 
-    def test8_profile_broken3(self):
-        tester= app.test_client(self)
-        response= tester.post('http://localhost:8080/api/profile',
-        data=FlaskTest.PROFILE_OBJ_BROKEN_3)
-        statuscode= response.status_code
-        self.assertEqual(statuscode, 400)
+    # def test8_profile_broken3(self):
+    #     tester= app.test_client(self)
+    #     response= tester.post('http://localhost:5000/api/profile',
+    #     data=FlaskTest.PROFILE_OBJ_BROKEN_3)
+    #     statuscode= response.status_code
+    #     self.assertEqual(statuscode, 400)
 
-    def test9_profile_broken4(self):
-        tester= app.test_client(self)
-        response= tester.post('http://localhost:8080/api/profile',
-        data=FlaskTest.PROFILE_OBJ_BROKEN_4)
-        statuscode= response.status_code
-        self.assertEqual(statuscode, 400)
+    # def test9_profile_broken4(self):
+    #     tester= app.test_client(self)
+    #     response= tester.post('http://localhost:5000/api/profile',
+    #     data=FlaskTest.PROFILE_OBJ_BROKEN_4)
+    #     statuscode= response.status_code
+    #     self.assertEqual(statuscode, 400)
     
-    def test10_profile_broken5(self):
-        tester= app.test_client(self)
-        response= tester.post('http://localhost:8080/api/profile',
-        data=FlaskTest.PROFILE_OBJ_BROKEN_5)
-        statuscode= response.status_code
-        self.assertEqual(statuscode, 400)
+    # def test10_profile_broken5(self):
+    #     tester= app.test_client(self)
+    #     response= tester.post('http://localhost:5000/api/profile',
+    #     data=FlaskTest.PROFILE_OBJ_BROKEN_5)
+    #     statuscode= response.status_code
+    #     self.assertEqual(statuscode, 400)
 
-    def test11_profile_broken6(self):
-        tester= app.test_client(self)
-        response= tester.post('http://localhost:8080/api/profile',
-        data=FlaskTest.PROFILE_OBJ_BROKEN_6)
-        statuscode= response.status_code
-        self.assertEqual(statuscode, 400)
+    # def test11_profile_broken6(self):
+    #     tester= app.test_client(self)
+    #     response= tester.post('http://localhost:5000/api/profile',
+    #     data=FlaskTest.PROFILE_OBJ_BROKEN_6)
+    #     statuscode= response.status_code
+    #     self.assertEqual(statuscode, 400)
 
-    def test12_profile_broken7(self):
-        tester= app.test_client(self)
-        response= tester.post('http://localhost:8080/api/profile',
-        data=FlaskTest.PROFILE_OBJ_BROKEN_7)
-        statuscode= response.status_code
-        self.assertEqual(statuscode, 400)
+    # def test12_profile_broken7(self):
+    #     tester= app.test_client(self)
+    #     response= tester.post('http://localhost:5000/api/profile',
+    #     data=FlaskTest.PROFILE_OBJ_BROKEN_7)
+    #     statuscode= response.status_code
+    #     self.assertEqual(statuscode, 400)
 
-    def test13_getprofile(self):
-        tester= app.test_client(self)
-        response= tester.get('http://localhost:5000/api/profile?username=')
-        statuscode= response.status_code
-        self.assertEqual(statuscode, 200)
+    # def test13_getprofile(self):
+    #     tester= app.test_client(self)
+    #     response= tester.get('http://localhost:5000/api/profile?username=')
+    #     statuscode= response.status_code
+    #     self.assertEqual(statuscode, 200)
+
     def test14_checkavail(self):
         tester = app.test_client(self)
-        response = tester.get('http:://localhost:8080/reserve',
+        response = tester.post('http://localhost:5000/api/reserve',
         data = FlaskTest.RESERVATION_TEST_1)
         status_code = response.status_code
         self.assertEqual(status_code, 200)
+        
     def test15_checkavail(self):
         tester = app.test_client(self)
-        response = tester.get('http:://localhost:8080/reserve',
-        data = FlaskTest.RESERVATION_TEST_2)
+        response = tester.post('http://localhost:5000/api/reserve',
+        data = FlaskTest.RESERVATION_TEST_BROKEN2)
         status_code = response.status_code
-        self.assertEqual(status_code, 200)
+        self.assertEqual(status_code, 400)
 
 if __name__== "__main__":
     unittest.main()

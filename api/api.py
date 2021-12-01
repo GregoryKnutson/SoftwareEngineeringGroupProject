@@ -181,9 +181,14 @@ def profile_endpoint():
 
     billingAddress = json.loads(request.form['billingAddress'])
     mailingAddress = json.loads(request.form['mailingAddress'])
-    payment = json.loads(request.form['payment'])
-    lastFourDigits = int(str(payment['cardNumber'])[len(str(payment['cardNumber'])) - 4 :])
-    print(lastFourDigits)
+
+    cardUpated = request.form['cardUpdated']
+    if cardUpated == 'true':
+      payment = json.loads(request.form['payment'])
+      lastFourDigits = int(str(payment['cardNumber'])[len(str(payment['cardNumber'])) - 4 :])
+    else:
+      lastFourDigits = int(request.form['lastFourDigits'])
+
     if len(billingAddress['address']) > 50 or len(mailingAddress['address']) > 50:
       return jsonify({'Alert!': 'Invalid Address!'}), 400
     if len(billingAddress['city']) > 20 or len(mailingAddress['city']) > 20:
@@ -204,9 +209,6 @@ def profile_endpoint():
     user = Userinfo.query.filter_by(usercredentials_username = username).first()
     billingAddressID = None
     mailingAddressID = None
-
-    userPayment = Paymentinfo.query.filter_by(cardnumber = sha_hash(payment['cardNumber']), securitycode = sha_hash(payment['cardSecurityCode'])).first()
-    cardID = None
 
     if isAddressEqual: #checks if addresses are equal
       userAddress = Address.query.filter_by(city = billingAddress['city'], state = billingAddress['state'], address = billingAddress['address'], zipcode = billingAddress['zip']).first() #looks for address in DB
@@ -243,21 +245,25 @@ def profile_endpoint():
         mailingAddressID = newMailingAddress.addressid
         print(mailingAddressID)
 
-    if(userPayment):
-      cardID= userPayment.paymentid
-    else:
-      newPaymentInfo = Paymentinfo(paymentname = payment['cardName'], cardnumber = sha_hash(payment['cardNumber']), expirationdate = sha_hash(payment['cardExpiration']), securitycode = sha_hash(payment['cardSecurityCode']), lastfourdigits = lastFourDigits)
-      db.session.merge(newPaymentInfo)
-      db.session.commit()
+    cardID = None
+    if cardUpated == 'true':
       userPayment = Paymentinfo.query.filter_by(cardnumber = sha_hash(payment['cardNumber']), securitycode = sha_hash(payment['cardSecurityCode'])).first()
-      cardID= userPayment.paymentid
+      if (userPayment):
+        cardID= userPayment.paymentid
+      else:
+        newPaymentInfo = Paymentinfo(paymentname = payment['cardName'], cardnumber = sha_hash(payment['cardNumber']), expirationdate = sha_hash(payment['cardExpiration']), securitycode = sha_hash(payment['cardSecurityCode']), lastfourdigits = lastFourDigits)
+        db.session.merge(newPaymentInfo)
+        db.session.commit()
+        userPayment = Paymentinfo.query.filter_by(cardnumber = sha_hash(payment['cardNumber']), securitycode = sha_hash(payment['cardSecurityCode'])).first()
+        cardID= userPayment.paymentid
 
     #Updates current user
     if user:
       user.name = name
       user.phonenumber = phonenumber
       user.email = email
-      user.paymentinfo_paymentid = cardID
+      if cardUpated == 'true':
+        user.paymentinfo_paymentid = cardID
 
       oldBillingAddressID = user.billingaddressid
       oldMailingAddressID = user.mailingaddressid
@@ -299,6 +305,10 @@ def profile_endpoint():
     if user: 
         billingAddressQuery = Address.query.filter_by(addressid = user.billingaddressid).first()
         mailingAddressQuery = Address.query.filter_by(addressid = user.mailingaddressid).first()
+        paymentQuery = Paymentinfo.query.filter_by(paymentid = user.paymentinfo_paymentid).first()
+        lastFourDigits = ""
+        if paymentQuery:
+          lastFourDigits = paymentQuery.lastfourdigits
 
         bAddress = {
           "address": billingAddressQuery.address,
@@ -319,6 +329,7 @@ def profile_endpoint():
                 "email": user.email,
                 "billingAddress": bAddress,
                 "mailingAddress": mAddress,
+                "lastFourDigits": lastFourDigits,
                 "validPayment": True
             }
 
@@ -335,6 +346,7 @@ def profile_endpoint():
           "name": "",
           "phonenumber": "",
           "email": "",
+          "lastFourDigits": "",
           "billingAddress": blankAddress,
           "mailingAddress": blankAddress,
         }
@@ -547,12 +559,17 @@ def reservations_endpoint():
     return json.dumps(data)
   else:
     return jsonify(reservations)
+
 @app.route('/api/avail', methods=['POST'])
 def avail():
     g = request.form['numGuests']
     reservationDay = request.form['date']
     reservationStartTime = request.form['sTime']
     reservationEndTime = request.form['eTime']
+    
+    if reservationStartTime >= reservationEndTime:
+      return jsonify({'Alert!': 'Invalid Times!'}), 400
+
     NUM_EIGHT_TABLE = 4
     NUM_SIX_TABLE = 4
     NUM_FOUR_TABLE = 4
