@@ -26,6 +26,8 @@ const UserInfo = () => {
 
   const { handleChange, handleFocus, values } = useForm();
   const [cardAdded, setCardAdded] = useState(false)
+  const [cardUpdated, setCardUpdated] = useState(false)
+  const [lastFour, setLastFour] = useState("")
 
   const changeBillingAddress = (e) => {
     setBillingAddress({...billingAddress, [e.target.name]:e.target.value})
@@ -71,6 +73,7 @@ const UserInfo = () => {
           setMailingAddress(result.mailingAddress)
         }
         if(result.validPayment == true){
+          setLastFour(result.lastFourDigits)
           setCardAdded(true)
         }
 
@@ -131,7 +134,17 @@ const UserInfo = () => {
       formData.append("email", emailState);
       formData.append("billingAddress", JSON.stringify(billingAddress))
       formData.append("mailingAddress", JSON.stringify(mailingAddress))
-      formData.append("payment", JSON.stringify(values))
+      if (cardUpdated === true)
+      {
+        formData.append("payment", JSON.stringify(values))
+        formData.append("cardUpdated", "true")
+      }
+      if (lastFour !== "")
+      {
+        formData.append("lastFourDigits", lastFour)
+        formData.append("cardUpdated", "false")
+      }
+
 
       fetch(
         `${process.env.API_URL}/api/profile?token=${localStorage.getItem(
@@ -246,7 +259,7 @@ const UserInfo = () => {
             </div>
           </div>
           <div>
-            <PaymentModal handleChange={handleChange} handleFocus={handleFocus} values={values} cardAdded={cardAdded} setCardAdded={setCardAdded}></PaymentModal>
+            <PaymentModal handleChange={handleChange} handleFocus={handleFocus} values={values} cardAdded={cardAdded} setCardAdded={setCardAdded} setCardUpdated={setCardUpdated}></PaymentModal>
             </div>
           <div className="button">
             <input

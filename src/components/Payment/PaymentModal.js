@@ -12,7 +12,7 @@ import "react-credit-cards/es/styles-compiled.css";
 
 import valid from "card-validator";
 
-const PaymentModal = ({handleChange, handleFocus, values, cardAdded, setCardAdded}) => {
+const PaymentModal = ({handleChange, handleFocus, values, cardAdded, setCardAdded, setCardUpdated}) => {
 
     const [open, setOpen] = React.useState(false);
     const [cardErrors, setCardErrors] = useState({        
@@ -98,6 +98,7 @@ const PaymentModal = ({handleChange, handleFocus, values, cardAdded, setCardAdde
       var variant = validateInfo(values)
       if (variant == "success"){
         setCardAdded(true)
+        setCardUpdated(true)
         handleClose()
       }
   };

@@ -13,7 +13,7 @@ import TimePicker from 'react-bootstrap-time-picker'
 import jwt_decode from "jwt-decode";
 
 const ConfirmModal = (obj) => {
-
+  
 function alertObject(obj){      
     for(var key in obj) {
     alert(obj[key]);
