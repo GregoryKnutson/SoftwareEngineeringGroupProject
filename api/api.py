@@ -390,7 +390,7 @@ def minTablesNeeded(n_guests, avail): #assuming there is always a valid solution
        # (i.e n_guests = 16 avail = {8: 1, 6: 2, 4: 1}) ideal used would be used = {6: 2, 4: 1} not used = {8: 1, 6: 1, 4: 1}
         return used
         
-@app.route('/api/holiday', methods=['GET', 'POST'])
+@app.route('/api/holiday', methods=['POST'])
 def holiday_endpoint():
     reservationDay = request.form['reservationDay']
     dayOfTheWeek = request.form['dayOfTheWeek']
@@ -434,6 +434,9 @@ def reserve_endpoint():
     reservationDay = request.form['reservationDay']
     reservationStartTime = request.form['reservationStartTime']
     reservationEndTime = request.form['reservationEndTime']
+
+    if reservationStartTime >= reservationEndTime:
+      return jsonify({'Alert!': 'Invalid Times!'}), 400
     numGuests = int(request.form['numGuests'])
     extraCharge = int(request.form['extraCharge'])
     
